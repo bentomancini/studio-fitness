@@ -79,7 +79,10 @@ const CONFIG_PADRAO: ConfigCobranca = {
  * Se o aluno tem dia fixo (ex.: dia 31), em fevereiro ajusta para 28 ou 29, mas preserva
  * o dia 31 como âncora para os meses seguintes.
  */
-export function calcularProximoVencimento(dataVencimentoIso: string, diaPadrao?: number | null): string {
+export async function calcularProximoVencimento(
+  dataVencimentoIso: string,
+  diaPadrao?: number | null
+): Promise<string> {
   const partes = dataVencimentoIso.split("-").map(Number);
   const ano = partes[0];
   const mes = partes[1]; // 1 a 12
@@ -158,7 +161,7 @@ export async function salvarConfiguracoesCobranca(
   for (const item of linhas) {
     const { error } = await supabase.from("config").upsert(item, { onConflict: "chave" });
     if (error) {
-      return { error: `Erro ao salvar configuração '${item.chave}': ${error.message}` };
+      return { ok: false, error: `Erro ao salvar configuração '${item.chave}': ${error.message}` };
     }
   }
 
@@ -381,11 +384,11 @@ export async function marcarComoPago(
     .single();
 
   if (errBusca || !cobranca) {
-    return { error: "Cobrança não encontrada." };
+    return { ok: false, error: "Cobrança não encontrada." };
   }
 
   if (cobranca.status === "pago") {
-    return { error: "Esta cobrança já está marcada como paga." };
+    return { ok: false, error: "Esta cobrança já está marcada como paga." };
   }
 
   // 1) Atualiza a cobrança atual para PAGO
@@ -399,7 +402,7 @@ export async function marcarComoPago(
     .eq("id", cobrancaId);
 
   if (errUpdate) {
-    return { error: `Erro ao marcar pagamento: ${errUpdate.message}` };
+    return { ok: false, error: `Erro ao marcar pagamento: ${errUpdate.message}` };
   }
 
   let novaCobrancaId: string | undefined = undefined;
@@ -408,7 +411,7 @@ export async function marcarComoPago(
   if (cobranca.tipo === "recorrente") {
     const aluno = Array.isArray(cobranca.aluno) ? cobranca.aluno[0] : cobranca.aluno;
     const diaPadrao = aluno?.dia_vencimento ?? null;
-    const proximoVencimento = calcularProximoVencimento(cobranca.data_vencimento, diaPadrao);
+    const proximoVencimento = await calcularProximoVencimento(cobranca.data_vencimento, diaPadrao);
     const proximoMesRef = proximoVencimento.slice(0, 7);
 
     // Verifica se já existe cobrança ativa para o próximo ciclo
@@ -466,11 +469,11 @@ export async function desfazerPagamento(cobrancaId: string): Promise<{ ok: boole
     .single();
 
   if (errBusca || !cobranca) {
-    return { error: "Cobrança não encontrada." };
+    return { ok: false, error: "Cobrança não encontrada." };
   }
 
   if (cobranca.status !== "pago") {
-    return { error: "Esta cobrança não está com status pago." };
+    return { ok: false, error: "Esta cobrança não está com status pago." };
   }
 
   // 1) Volta status para pendente
@@ -484,7 +487,7 @@ export async function desfazerPagamento(cobrancaId: string): Promise<{ ok: boole
     .eq("id", cobrancaId);
 
   if (errUpdate) {
-    return { error: `Erro ao desfazer pagamento: ${errUpdate.message}` };
+    return { ok: false, error: `Erro ao desfazer pagamento: ${errUpdate.message}` };
   }
 
   // 2) Se for recorrente, remove a cobrança do mês seguinte que foi gerada automaticamente
@@ -520,7 +523,7 @@ export async function registrarContatoWhatsApp(
     .single();
 
   if (errBusca || !cobranca) {
-    return { error: "Cobrança não encontrada." };
+    return { ok: false, error: "Cobrança não encontrada." };
   }
 
   const novaQtd = (cobranca.qtd_contatos ?? 0) + 1;
@@ -535,7 +538,7 @@ export async function registrarContatoWhatsApp(
     .eq("id", cobrancaId);
 
   if (errUpdate) {
-    return { error: `Erro ao registrar contato: ${errUpdate.message}` };
+    return { ok: false, error: `Erro ao registrar contato: ${errUpdate.message}` };
   }
 
   revalidatePath("/cobrancas");
@@ -559,10 +562,10 @@ export async function criarCobrancaAvulsa(dados: {
   const dataVencimento = (dados.dataVencimento || "").trim();
   const observacao = (dados.observacao || "").trim();
 
-  if (!dados.alunoId) return { error: "Selecione o aluno." };
-  if (!titulo || titulo.length > 120) return { error: "O título da cobrança deve ter entre 1 e 120 caracteres." };
-  if (isNaN(valor) || valor <= 0) return { error: "Informe um valor válido maior que zero." };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataVencimento)) return { error: "Data de vencimento inválida." };
+  if (!dados.alunoId) return { ok: false, error: "Selecione o aluno." };
+  if (!titulo || titulo.length > 120) return { ok: false, error: "O título da cobrança deve ter entre 1 e 120 caracteres." };
+  if (isNaN(valor) || valor <= 0) return { ok: false, error: "Informe um valor válido maior que zero." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataVencimento)) return { ok: false, error: "Data de vencimento inválida." };
 
   const { data, error } = await supabase
     .from("cobrancas")
@@ -580,7 +583,7 @@ export async function criarCobrancaAvulsa(dados: {
     .single();
 
   if (error) {
-    return { error: `Erro ao criar cobrança avulsa: ${error.message}` };
+    return { ok: false, error: `Erro ao criar cobrança avulsa: ${error.message}` };
   }
 
   revalidatePath("/cobrancas");
@@ -599,7 +602,7 @@ export async function cancelarCobranca(cobrancaId: string): Promise<{ ok: boolea
     .eq("id", cobrancaId);
 
   if (error) {
-    return { error: `Erro ao cancelar cobrança: ${error.message}` };
+    return { ok: false, error: `Erro ao cancelar cobrança: ${error.message}` };
   }
 
   revalidatePath("/cobrancas");
