@@ -21,25 +21,6 @@ export type Compra = {
   validade: string | null;
 };
 
-function lerDadosDoPlano(formData: FormData) {
-  const nome = String(formData.get("nome") ?? "").trim();
-  const qtd = Number(formData.get("qtd_aulas"));
-  const valRaw = String(formData.get("validade_dias") ?? "").trim();
-  const validadeDias = valRaw ? Number(valRaw) : null     ;
-  if (nome.length < 1 || nome.length > 60) return { error: "Informe o nome do plano." };
-  if (!Number.isInteger(qtd) || qtd < 1 || qtd > 500) return { error: "Quantidade de aulas do plano é inválida." };
-  if (validadeDias !== null && (!Number.isInteger(validadeDias) || validadeDias < 1 || validadeDias > 999)) {
-    return { error: "Validade inválida (em dias)." };
-  }
-  return { nome, qtd_aulas: qtd, validade_dias: validadeDias };
-}
-
-function lerCompraDoForm(formData: FormData) {
-  const alunoId = String(formData.get("aluno_id") ?? "");
-  const planoId = String(formData.get("plano_id") ?? "");
-  if (!alunoId || !planoId) return { error: "Escolha o aluno e o plano do pacote." };
-  return { aluno_id: alunoId, plano_id: planoId };
-}
 
 export async function criarPlano(dados: { nome: string; qtd_aulas: number; validade_dias: number | null }) {
   const supabase = await exigeDono();

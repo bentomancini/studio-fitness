@@ -2,19 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Calendar, CalendarPlus, Users, Clock } from "lucide-react";
 
 export function BottomNav() {
   const pathname = usePathname();
-  const [targetPath, setTargetPath] = useState<string | null>(null);
-
-  // Reseta o estado otimista assim que a rota efetivamente carregar
-  useEffect(() => {
-    setTargetPath(null);
-  }, [pathname]);
-
-  const activePath = targetPath ?? pathname;
+  // Estado otimista para feedback instantâneo ao tocar
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const activePath = pendingPath && pendingPath !== pathname ? pendingPath : pathname;
 
   const tabs = [
     {
@@ -65,7 +60,7 @@ export function BottomNav() {
                 href={tab.href}
                 onClick={() => {
                   if (pathname !== tab.href) {
-                    setTargetPath(tab.href);
+                    setPendingPath(tab.href);
                   }
                 }}
                 className={`btn-press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1 transition-all ${
