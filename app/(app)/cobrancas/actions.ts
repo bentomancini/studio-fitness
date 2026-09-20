@@ -6,6 +6,7 @@ import {
   registrarContatoWhatsApp,
   criarCobrancaAvulsa,
   cancelarCobranca,
+  salvarConfiguracoesCobranca,
   FormaPagamento,
 } from "@/lib/services/cobrancas";
 
@@ -45,4 +46,14 @@ export async function acaoCriarCobrancaAvulsa(formData: FormData) {
 
 export async function acaoCancelarCobranca(cobrancaId: string) {
   return await cancelarCobranca(cobrancaId);
+}
+
+export async function acaoSalvarConfiguracoesCobranca(dados: {
+  chave_pix: string;
+  studio_nome: string;
+  msg_antecipada: string;
+  msg_hoje: string;
+  msg_atraso: string;
+}) {
+  return await salvarConfiguracoesCobranca(dados);
 }
