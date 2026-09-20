@@ -1,0 +1,427 @@
+â¨¯ ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+  [90m 7 |[0m [36mexport[0m [36mtype[0m [33mCompra[0m = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+  [90m 8 |[0m
+[31m[1m>[0m [90m 9 |[0m [36mexport[0m [36mfunction[0m lerDadosDoPlano(formData: [33mFormData[0m) {
+  [90m   |[0m                 [31m[1m^^^^^^^^^^^^^^^[0m
+  [90m10 |[0m   [36mconst[0m nome = [33mString[0m(formData.get([32m"nome"[0m) ?? [32m""[0m).trim();
+  [90m11 |[0m   [36mconst[0m qtd = [33mNumber[0m(formData.get([32m"qtd_aulas"[0m));
+  [90m12 |[0m   [36mconst[0m valRaw = [33mString[0m(formData.get([32m"validade_dias"[0m) ?? [32m""[0m).trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+â¨¯ ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+  [90m 7 |[0m [36mexport[0m [36mtype[0m [33mCompra[0m = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+  [90m 8 |[0m
+[31m[1m>[0m [90m 9 |[0m [36mexport[0m [36mfunction[0m lerDadosDoPlano(formData: [33mFormData[0m) {
+  [90m   |[0m                 [31m[1m^^^^^^^^^^^^^^^[0m
+  [90m10 |[0m   [36mconst[0m nome = [33mString[0m(formData.get([32m"nome"[0m) ?? [32m""[0m).trim();
+  [90m11 |[0m   [36mconst[0m qtd = [33mNumber[0m(formData.get([32m"qtd_aulas"[0m));
+  [90m12 |[0m   [36mconst[0m valRaw = [33mString[0m(formData.get([32m"validade_dias"[0m) ?? [32m""[0m).trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] Uncaught Error: ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+    at <unknown> (Error: ./lib/services/planos.ts:9:17)
+    at <unknown> (Error: (./lib/services/planos.ts:9:17)
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+â¨¯ ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+  [90m 7 |[0m [36mexport[0m [36mtype[0m [33mCompra[0m = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+  [90m 8 |[0m
+[31m[1m>[0m [90m 9 |[0m [36mexport[0m [36mfunction[0m lerDadosDoPlano(formData: [33mFormData[0m) {
+  [90m   |[0m                 [31m[1m^^^^^^^^^^^^^^^[0m
+  [90m10 |[0m   [36mconst[0m nome = [33mString[0m(formData.get([32m"nome"[0m) ?? [32m""[0m).trim();
+  [90m11 |[0m   [36mconst[0m qtd = [33mNumber[0m(formData.get([32m"qtd_aulas"[0m));
+  [90m12 |[0m   [36mconst[0m valRaw = [33mString[0m(formData.get([32m"validade_dias"[0m) ?? [32m""[0m).trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+[browser] Uncaught Error: ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+    at <unknown> (Error: ./lib/services/planos.ts:9:17)
+    at <unknown> (Error: (./lib/services/planos.ts:9:17)
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+'wmic' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
+[browser] Uncaught Error: ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+    at <unknown> (Error: ./lib/services/planos.ts:9:17)
+    at <unknown> (Error: (./lib/services/planos.ts:9:17)
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] Uncaught Error: ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+    at <unknown> (Error: ./lib/services/planos.ts:9:17)
+    at <unknown> (Error: (./lib/services/planos.ts:9:17)
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] Uncaught Error: ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts
+
+
+    at <unknown> (Error: ./lib/services/planos.ts:9:17)
+    at <unknown> (Error: (./lib/services/planos.ts:9:17)
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlano(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 
+'wmic' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
+'wmic' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
+'wmic' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
+'wmic' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
+[browser] ./lib/services/planos.ts:9:17
+Error: Server Actions must be async functions.
+   7 | export type Compra = { id: string; aluno_id: string; plano_id: string; qtd_aulas: number; ...
+   8 |
+>  9 | export function lerDadosDoPlanoInterno(formData: FormData) {
+     |                 ^^^^^^^^^^^^^^^^^^^^^^
+  10 |   const nome = String(formData.get("nome") ?? "").trim();
+  11 |   const qtd = Number(formData.get("qtd_aulas"));
+  12 |   const valRaw = String(formData.get("validade_dias") ?? "").trim();
+
+Ecmascript file had an error
+
+Import trace:
+  Server Component:
+    ./lib/services/planos.ts
+    ./lib/services/agendamentos.ts
+    ./app/(app)/agendar/actions.ts 

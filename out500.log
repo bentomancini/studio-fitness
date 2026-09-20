@@ -6,3 +6,50 @@
 ✓ Running next.config.ts took 93ms
 
  GET /login 200 in 683ms (next.js: 217ms, proxy.ts: 287ms, application-code: 178ms)
+ GET /login 200 in 51ms (next.js: 5ms, proxy.ts: 7ms, application-code: 39ms)
+ GET / 200 in 1229ms (next.js: 68ms, proxy.ts: 659ms, application-code: 502ms)
+ GET / 200 in 233ms (next.js: 3ms, proxy.ts: 66ms, application-code: 164ms)
+ GET / 200 in 190ms (next.js: 4ms, proxy.ts: 37ms, application-code: 150ms)
+ POST / 200 in 529ms (next.js: 4ms, proxy.ts: 209ms, application-code: 316ms)
+  └─ ƒ alternarSuspensao("0682f18a-28ba-40f2-863a-a5f228893c96", "2026-09-06", false, {}, {}) in 160ms app/(app)/agenda/actions.ts
+ POST / 200 in 239ms (next.js: 4ms, proxy.ts: 31ms, application-code: 204ms)
+  └─ ƒ alternarSuspensao("0682f18a-28ba-40f2-863a-a5f228893c96", "2026-09-06", true, {}, {}) in 64ms app/(app)/agenda/actions.ts
+ POST / 200 in 231ms (next.js: 6ms, proxy.ts: 44ms, application-code: 180ms)
+  └─ ƒ alternarSuspensao("0682f18a-28ba-40f2-863a-a5f228893c96", "2026-09-06", false, {}, {}) in 59ms app/(app)/agenda/actions.ts
+ POST / 200 in 236ms (next.js: 4ms, proxy.ts: 35ms, application-code: 197ms)
+  └─ ƒ alternarSuspensao("0682f18a-28ba-40f2-863a-a5f228893c96", "2026-09-06", true, {}, {}) in 75ms app/(app)/agenda/actions.ts
+ GET / 200 in 84ms (next.js: 4ms, proxy.ts: 72ms, application-code: 8ms)
+ GET / 200 in 186ms (next.js: 3ms, proxy.ts: 37ms, application-code: 146ms)
+ GET /agendar 500 in 942ms (next.js: 791ms, proxy.ts: 35ms, application-code: 115ms)
+ GET /agendar 500 in 52ms (next.js: 8ms, proxy.ts: 36ms, application-code: 8ms)
+ GET /agendar 500 in 86ms (next.js: 9ms, proxy.ts: 68ms, application-code: 9ms)
+
+Could not open planos.ts in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+ GET / 500 in 79ms (next.js: 8ms, proxy.ts: 63ms, application-code: 8ms)
+ GET / 500 in 47ms (next.js: 7ms, proxy.ts: 32ms, application-code: 8ms)
+ GET / 500 in 57ms (next.js: 12ms, proxy.ts: 32ms, application-code: 12ms)
+ GET / 500 in 48ms (next.js: 7ms, proxy.ts: 32ms, application-code: 9ms)
+
+Could not open planos.ts in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open planos.ts in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open planos.ts in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open planos.ts in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+ GET / 200 in 853ms (next.js: 4ms, proxy.ts: 510ms, application-code: 339ms)
