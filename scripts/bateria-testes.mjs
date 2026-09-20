@@ -102,15 +102,30 @@ async function executarBateria() {
   process.stdout.write("• Verificando status da Migration 004 no Supabase... ");
   const res004 = await supabase.from("alunos").select("data_nascimento").limit(1);
   if (res004.error && res004.error.code === "42703") {
-    console.log("⚠️ PENDENTE: A tabela 'alunos' ainda não recebeu as novas colunas no Supabase.");
+    console.log("⚠️ PENDENTE: A tabela 'alunos' ainda não recebeu as colunas da migration 004.");
     errosEncontrados.push({
       modulo: "Supabase / Migration 004",
-      erro: "A coluna 'data_nascimento' ainda não foi criada no banco (o arquivo 004_ficha_aluno.sql precisa ser executado no SQL Editor do Supabase).",
+      erro: "A coluna 'data_nascimento' ainda não foi criada no banco.",
     });
   } else if (!res004.error) {
-    console.log("✅ APLICADA: Colunas da Migration 004 presentes no banco.");
+    console.log("✅ APLICADA");
   } else {
     console.log(`⚠️ Status: ${res004.error.message}`);
+  }
+
+  // Teste específico para verificar se a migration 005 (Cobranças) foi rodada
+  process.stdout.write("• Verificando status da Migration 005 (Cobranças) no Supabase... ");
+  const res005 = await supabase.from("cobrancas").select("id, valor, status, data_vencimento").limit(1);
+  if (res005.error && (res005.error.code === "42P01" || res005.error.code === "PGRST205")) {
+    console.log("⚠️ PENDENTE: A tabela 'cobrancas' ainda não foi criada no Supabase.");
+    errosEncontrados.push({
+      modulo: "Supabase / Migration 005",
+      erro: "A tabela 'cobrancas' precisa ser criada aplicando o arquivo 005_cobrancas.sql no Supabase.",
+    });
+  } else if (!res005.error) {
+    console.log("✅ APLICADA: Tabela 'cobrancas' pronta para uso.");
+  } else {
+    console.log(`⚠️ Status: ${res005.error.message}`);
   }
 
   testarLogica();
