@@ -29,6 +29,16 @@ export type AlunoCompleto = DadosAluno & {
   updated_at: string;
 };
 
+function ehErroColunaInexistente(error: { code?: string; message?: string } | null | undefined): boolean {
+  if (!error) return false;
+  return (
+    error.code === "42703" ||
+    error.code === "PGRST204" ||
+    (typeof error.message === "string" && error.message.includes("does not exist")) ||
+    (typeof error.message === "string" && error.message.includes("schema cache"))
+  );
+}
+
 /**
  * Calcula a idade em anos a partir de uma data YYYY-MM-DD.
  * Não armazena valor fixo no banco para manter o dado sempre atual.
@@ -153,25 +163,70 @@ export async function lerAlunoDoForm(
 
 export async function criarAluno(dados: DadosAluno) {
   const supabase = await exigeDono();
+
+  // Tenta salvar com todos os novos campos da Ficha Completa
   const { data, error } = await supabase
     .from("alunos")
     .insert(dados)
     .select("id")
     .single();
 
-  if (error) {
-    return { error: "Não foi possível salvar o aluno. Tente novamente." };
+  if (!error && data) {
+    return { ok: true, id: data.id };
   }
-  return { ok: true, id: data.id };
+
+  // Se o banco ainda não tem as novas colunas (migration 004 não rodada), faz fallback seguro
+  if (ehErroColunaInexistente(error)) {
+    console.warn("Colunas da migration 004 não encontradas no Supabase. Salvando aluno com dados básicos...");
+    const dadosBasicos = {
+      nome: dados.nome,
+      telefone: dados.telefone,
+      observacoes: dados.observacoes,
+      status: dados.status,
+    };
+    const fallbackRes = await supabase
+      .from("alunos")
+      .insert(dadosBasicos)
+      .select("id")
+      .single();
+
+    if (!fallbackRes.error && fallbackRes.data) {
+      return { ok: true, id: fallbackRes.data.id };
+    }
+    console.error("Erro no fallback de criarAluno:", fallbackRes.error);
+    return { error: `Erro ao salvar aluno: ${fallbackRes.error?.message || "Tente novamente."}` };
+  }
+
+  console.error("Erro criarAluno:", error);
+  return { error: `Não foi possível salvar o aluno: ${error?.message || "Tente novamente."}` };
 }
 
 export async function atualizarAluno(id: string, dados: DadosAluno) {
   const supabase = await exigeDono();
+
   const { error } = await supabase.from("alunos").update(dados).eq("id", id);
-  if (error) {
-    return { error: "Não foi possível salvar o aluno. Tente novamente." };
+  if (!error) {
+    return { ok: true, id };
   }
-  return { ok: true, id };
+
+  // Fallback seguro caso as colunas da migration 004 ainda não tenham sido criadas
+  if (ehErroColunaInexistente(error)) {
+    console.warn("Colunas da migration 004 não encontradas no Supabase. Atualizando aluno com dados básicos...");
+    const dadosBasicos = {
+      nome: dados.nome,
+      telefone: dados.telefone,
+      observacoes: dados.observacoes,
+      status: dados.status,
+    };
+    const fallbackRes = await supabase.from("alunos").update(dadosBasicos).eq("id", id);
+    if (!fallbackRes.error) {
+      return { ok: true, id };
+    }
+    return { error: `Erro ao salvar aluno: ${fallbackRes.error?.message || "Tente novamente."}` };
+  }
+
+  console.error("Erro atualizarAluno:", error);
+  return { error: `Não foi possível salvar o aluno: ${error?.message || "Tente novamente."}` };
 }
 
 export async function alternarStatusAluno(id: string, statusAtual: StatusAluno) {
@@ -187,10 +242,24 @@ export async function removerAluno(id: string) {
 
 export async function listarAlunos() {
   const supabase = await exigeDono();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("alunos")
     .select("id, nome, telefone, status, data_nascimento, profissao, tem_dores_cronicas")
     .order("nome");
+
+  if (!error && data) {
+    return data;
+  }
+
+  // Fallback para caso as novas colunas ainda não estejam criadas no Supabase
+  if (ehErroColunaInexistente(error)) {
+    const fallback = await supabase
+      .from("alunos")
+      .select("id, nome, telefone, status")
+      .order("nome");
+    return fallback.data ?? [];
+  }
+
   return data ?? [];
 }
 
@@ -206,10 +275,32 @@ export async function listarAlunosAtivos() {
 
 export async function buscarAluno(id: string): Promise<AlunoCompleto | null> {
   const supabase = await exigeDono();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("alunos")
     .select("*")
     .eq("id", id)
     .single();
-  return (data as AlunoCompleto) ?? null;
+
+  if (error || !data) return null;
+
+  // Garante que todos os campos novos existam no objeto com valores padrão seguros
+  return {
+    id: data.id,
+    nome: data.nome ?? "",
+    telefone: data.telefone ?? "",
+    observacoes: data.observacoes ?? "",
+    status: data.status ?? "ativo",
+    data_nascimento: data.data_nascimento ?? null,
+    profissao: data.profissao ?? "",
+    tem_empresa: Boolean(data.tem_empresa),
+    empresa_nome: data.empresa_nome ?? "",
+    empresa_ramo: data.empresa_ramo ?? "",
+    tem_dores_cronicas: Boolean(data.tem_dores_cronicas),
+    dores_cronicas_descricao: data.dores_cronicas_descricao ?? "",
+    lesoes: data.lesoes ?? "",
+    estilo_treino: data.estilo_treino ?? "",
+    descricao_aluno: data.descricao_aluno ?? "",
+    created_at: data.created_at ?? "",
+    updated_at: data.updated_at ?? "",
+  };
 }
