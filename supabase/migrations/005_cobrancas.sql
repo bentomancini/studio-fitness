@@ -53,11 +53,12 @@ create trigger cobrancas_updated_at
 alter table public.cobrancas enable row level security;
 
 drop policy if exists "cobrancas - somente dono" on public.cobrancas;
-create policy "cobrancas - somente dono"
+drop policy if exists "cobrancas - somente logados" on public.cobrancas;
+create policy "cobrancas - somente logados"
   on public.cobrancas for all
   to authenticated
-  using (auth.uid() = public.dono_id())
-  with check (auth.uid() = public.dono_id());
+  using (true)
+  with check (true);
 
 -- 5) Configurações padrão de cobrança e modelos de mensagem -----
 insert into public.config (chave, valor)

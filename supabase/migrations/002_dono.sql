@@ -20,7 +20,8 @@ create or replace function public.dono_id()
 returns uuid
 language sql
 stable
-security invoker
+security definer
+set search_path = public, auth, pg_temp
 as $$
   select id
   from auth.users
