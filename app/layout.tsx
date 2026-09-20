@@ -18,6 +18,11 @@ export const metadata: Metadata = {
     template: "%s · Studio Fitness",
   },
   description: "Agenda e gerenciamento do Studio Fitness",
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
