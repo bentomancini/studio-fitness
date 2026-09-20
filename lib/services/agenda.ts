@@ -17,9 +17,20 @@ function textoData(valor: unknown) {
   return "";
 }
 
-// Carrega tudo que as telas de Agenda e de Agendar precisam.
+import { dataHoje } from "@/lib/constantes";
+
+function subtrairDias(data: string, dias: number) {
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const dt = new Date(ano, mes - 1, dia - dias);
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const d = String(dt.getDate()).padStart(2, "0");
+  return `${dt.getFullYear()}-${m}-${d}`;
+}
+
+// Carrega tudo que as telas de Agenda e de Agendar precisam (otimizado com limite temporal).
 export async function carregarAgenda(): Promise<DadosAgenda> {
   const supabase = await exigeDono();
+  const limitePassado = subtrairDias(dataHoje(), 45);
 
   const [{ data: aulas }, { data: alunos }, { data: agendamentos }, { data: suspensoes }] =
     await Promise.all([
@@ -28,8 +39,14 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
         .select("id, tipo_aula, dia_semana, horario, limite_vagas")
         .eq("ativo", true),
       supabase.from("alunos").select("id, nome, telefone").eq("status", "ativo").order("nome"),
-      supabase.from("agendamentos").select("aula_id, aluno_id, data"),
-      supabase.from("aulas_suspensas").select("aula_id, data"),
+      supabase
+        .from("agendamentos")
+        .select("aula_id, aluno_id, data")
+        .gte("data", limitePassado),
+      supabase
+        .from("aulas_suspensas")
+        .select("aula_id, data")
+        .gte("data", limitePassado),
     ]);
 
   return {
