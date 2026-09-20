@@ -6,7 +6,7 @@ export type EstadoSuspensao = { error?: string };
 
 export type DadosAgenda = {
   aulas: { id: string; tipo_aula: string; dia_semana: number; horario: string; limite_vagas: number }[];
-  alunos: { id: string; nome: string }[];
+  alunos: { id: string; nome: string; telefone: string }[];
   agendamentos: { aula_id: string; aluno_id: string; data: string }[];
   suspensoes: { aula_id: string; data: string }[];
 };
@@ -27,7 +27,7 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
         .from("aulas")
         .select("id, tipo_aula, dia_semana, horario, limite_vagas")
         .eq("ativo", true),
-      supabase.from("alunos").select("id, nome").eq("status", "ativo").order("nome"),
+      supabase.from("alunos").select("id, nome, telefone").eq("status", "ativo").order("nome"),
       supabase.from("agendamentos").select("aula_id, aluno_id, data"),
       supabase.from("aulas_suspensas").select("aula_id, data"),
     ]);
@@ -40,7 +40,7 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
       horario: a.horario,
       limite_vagas: a.limite_vagas,
     })),
-    alunos: (alunos ?? []).map((a) => ({ id: a.id, nome: a.nome })),
+    alunos: (alunos ?? []).map((a) => ({ id: a.id, nome: a.nome, telefone: a.telefone })),
     agendamentos: (agendamentos ?? []).map((g) => ({
       aula_id: g.aula_id,
       aluno_id: g.aluno_id,

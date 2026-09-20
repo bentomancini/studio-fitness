@@ -8,6 +8,7 @@ import {
   formatoHorario,
 } from "@/lib/constantes";
 import { alternarSuspensao, EstadoSuspensao } from "./actions";
+import { montarLembreteWhatsApp } from "@/lib/lembrete";
 
 type Aula = {
   id: string;
@@ -17,7 +18,7 @@ type Aula = {
   limite_vagas: number;
 };
 
-type Aluno = { id: string; nome: string };
+type Aluno = { id: string; nome: string; telefone: string };
 
 type Agendamento = { aula_id: string; aluno_id: string; data: string };
 
@@ -54,10 +55,17 @@ export function Agenda({ aulas, alunos, agendamentos, suspensoes }: {
   const [aba, setAba] = useState<"dia" | "semana">("dia");
   const [data, setData] = useState(dataHoje());
 
-  const nomesDaAula = (aulaId: string, d: string) =>
+  const agendados = (aulaId: string, d: string) =>
     agendamentos
       .filter((g) => g.aula_id === aulaId && g.data === d)
-      .map((g) => alunos.find((a) => a.id === g.aluno_id)?.nome ?? "?");
+      .map((g) => {
+        const aluno = alunos.find((a) => a.id === g.aluno_id);
+        return {
+          alunoId: g.aluno_id,
+          nome: aluno?.nome ?? "?",
+          telefone: aluno?.telefone ?? "",
+        };
+      });
 
   const ocupadas = (aulaId: string, d: string) =>
     agendamentos.filter((g) => g.aula_id === aulaId && g.data === d).length;
@@ -101,7 +109,7 @@ export function Agenda({ aulas, alunos, agendamentos, suspensoes }: {
           data={data}
           setData={setData}
           aulas={aulasDoDia}
-          nomesDaAula={nomesDaAula}
+          agendados={agendados}
           ocupadas={ocupadas}
           suspensaEm={suspensaEm}
         />
@@ -119,11 +127,11 @@ export function Agenda({ aulas, alunos, agendamentos, suspensoes }: {
   );
 }
 
-function Dia({ data, setData, aulas, nomesDaAula, ocupadas, suspensaEm }: {
+function Dia({ data, setData, aulas, agendados, ocupadas, suspensaEm }: {
   data: string;
   setData: (d: string) => void;
   aulas: Aula[];
-  nomesDaAula: (aulaId: string, d: string) => string[];
+  agendados: (aulaId: string, d: string) => { alunoId: string; nome: string; telefone: string }[];
   ocupadas: (aulaId: string, d: string) => number;
   suspensaEm: (aulaId: string, d: string) => boolean;
 }) {
@@ -159,7 +167,7 @@ function Dia({ data, setData, aulas, nomesDaAula, ocupadas, suspensaEm }: {
       ) : (
         <ul className="flex flex-col gap-3">
           {aulas.map((aula) => {
-            const nomes = nomesDaAula(aula.id, data);
+            const agendadosLista = agendados(aula.id, data);
             const suspensa = suspensaEm(aula.id, data);
             const cheia = ocupadas(aula.id, data) >= aula.limite_vagas;
 
@@ -186,20 +194,42 @@ function Dia({ data, setData, aulas, nomesDaAula, ocupadas, suspensaEm }: {
                   </span>
                 </div>
 
-                {nomes.length === 0 ? (
+                {agendadosLista.length === 0 ? (
                   <p className="mt-3 border-t border-zinc-100 pt-3 text-sm text-zinc-500">
                     Nenhum aluno agendado.
                   </p>
                 ) : (
                   <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-zinc-100 pt-3">
-                    {nomes.map((nome, i) => (
-                      <span
-                        key={i}
-                        className="rounded-full bg-zinc-100 px-3 py-1 text-sm text-zinc-800"
-                      >
-                        {nome}
-                      </span>
-                    ))}
+                    {agendadosLista.map((aluno) => {
+                      const link = montarLembreteWhatsApp({
+                        nome: aluno.nome,
+                        telefone: aluno.telefone,
+                        tipoAula: aula.tipo_aula,
+                        horario: aula.horario,
+                        data,
+                      });
+                      return (
+                        <span
+                          key={aluno.alunoId}
+                          className="flex items-center gap-1 rounded-full bg-zinc-100 py-1 pl-3 pr-1 text-sm text-zinc-800"
+                        >
+                          {aluno.nome}
+                          {link && (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Lembrar por WhatsApp para ${aluno.nome}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-white"
+                            >
+                              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
+                                <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2m0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.26 8.26 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24s8.24 3.7 8.24 8.24-3.7 8.24-8.23 8.24m4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.17.24-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.13-1.05-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28" />
+                              </svg>
+                            </a>
+                          )}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
 

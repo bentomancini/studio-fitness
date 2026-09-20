@@ -18,7 +18,7 @@ type Aula = {
   limite_vagas: number;
 };
 
-type Aluno = { id: string; nome: string };
+type Aluno = { id: string; nome: string; telefone: string };
 
 type Agendamento = { aula_id: string; aluno_id: string; data: string };
 
