@@ -57,7 +57,7 @@ export function AlunoForm({ aluno }: { aluno?: Aluno }) {
         <select
           name="status"
           defaultValue={aluno?.status ?? "ativo"}
-          className="h-12 rounded-xl border border-zinc-300 bg-white px-4 text-base"
+          className="h-12 rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900"
         >
           <option value="ativo">Ativo</option>
           <option value="inativo">Inativo</option>

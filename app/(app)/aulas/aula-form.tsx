@@ -36,11 +36,14 @@ export function AulaForm({ aula }: { aula?: Aula }) {
         <span className="text-sm font-medium">Dia da semana</span>
         <select
           name="dia_semana"
-          defaultValue={aula?.dia_semana ?? 1}
-          className="h-12 rounded-xl border border-zinc-300 bg-white px-4 text-base"
+          defaultValue={aula ? aula.dia_semana : ""}
+          className="h-12 rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900"
         >
+          <option value="" disabled className="text-zinc-900">
+            Escolha o dia
+          </option>
           {DIAS_SEMANA.map((dia, i) => (
-            <option key={dia} value={i}>
+            <option key={dia} value={i} className="text-zinc-900">
               {dia}
             </option>
           ))}
