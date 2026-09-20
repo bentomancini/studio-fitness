@@ -1,13 +1,13 @@
 {
-  "name": "Studio Fitness",
-  "short_name": "Studio",
-  "description": "Agenda e gerenciamento do Studio Fitness",
+  "name": "Intense Fitness",
+  "short_name": "Intense",
+  "description": "Agenda e gerenciamento do Intense Fitness",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#18181b",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "lang": "pt-BR",
   "icons": [
     { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

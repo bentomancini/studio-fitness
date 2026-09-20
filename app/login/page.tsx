@@ -28,7 +28,7 @@ export default function LoginPage() {
               <Dumbbell className="h-8 w-8 stroke-[2.5]" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              Studio Fitness
+              Intense Fitness
             </h1>
             <p className="mt-1 text-sm text-zinc-400">
               Gerenciamento exclusivo do estúdio
@@ -48,7 +48,7 @@ export default function LoginPage() {
                   required
                   autoComplete="email"
                   inputMode="email"
-                  placeholder="bentomancini@gmail.com"
+                  placeholder="usuario@gmail.com"
                   className="h-12 w-full rounded-xl border border-white/10 bg-zinc-900/90 pl-11 pr-4 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
                 />
               </div>
@@ -102,7 +102,7 @@ export default function LoginPage() {
 
         {/* Rodapé discreto */}
         <p className="mt-6 text-center text-xs text-zinc-600">
-          Acesso restrito ao proprietário · Studio Fitness
+          Acesso restrito ao proprietário · Intense Fitness
         </p>
       </div>
     </main>

@@ -22,7 +22,7 @@ export default async function AppLayout({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold tracking-tight text-white">
-              Studio Fitness
+              Intense Fitness
             </span>
             <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
               Admin

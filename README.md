@@ -1,6 +1,6 @@
-# Studio Fitness
+# Intense Fitness
 
-Aplicativo de agenda e gerenciamento de um estúdio fitness, feito para ser
+Aplicativo de agenda e gerenciamento do Intense Fitness, feito para ser
 usado no iPhone (Safari mobile) pelo administrador do estúdio.
 
 **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + Supabase (banco e

@@ -20,7 +20,7 @@ export default function NovoAlunoPage() {
             Novo Aluno
           </h1>
           <p className="text-xs text-zinc-400">
-            Cadastre um novo aluno no Studio Fitness
+            Cadastre um novo aluno no Intense Fitness
           </p>
         </div>
       </div>

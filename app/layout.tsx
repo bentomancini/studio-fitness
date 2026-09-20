@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Studio Fitness",
-    template: "%s · Studio Fitness",
+    default: "Intense Fitness",
+    template: "%s · Intense Fitness",
   },
-  description: "Agenda e gerenciamento do Studio Fitness",
-  applicationName: "Studio Fitness",
+  description: "Agenda e gerenciamento do Intense Fitness",
+  applicationName: "Intense Fitness",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Studio Fitness",
+    title: "Intense Fitness",
   },
   formatDetection: { telephone: true },
   icons: {
