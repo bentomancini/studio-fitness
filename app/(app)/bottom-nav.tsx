@@ -45,10 +45,10 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1 transition-all ${
+              className={`btn-press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl py-1 transition-all ${
                 active
                   ? "text-emerald-400"
-                  : "text-zinc-400 hover:text-zinc-200 active:scale-95"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               {/* Indicador de aba ativa */}

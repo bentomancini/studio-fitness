@@ -4,6 +4,38 @@ import type { NextRequest } from "next/server";
 import { isDono } from "@/lib/dono";
 
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isLoginPage = pathname === "/login";
+
+  // Identifica requisições de prefetch do Next.js
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch";
+
+  // Checa se o usuário possui cookie de autenticação do Supabase
+  const cookiesList = request.cookies.getAll();
+  const hasAuthCookie = cookiesList.some((c) => c.name.includes("-auth-token"));
+
+  // 1. Otimização de Rota Não-Autenticada (Zero Latência):
+  // Se não tem cookie de auth e já está no /login, libera imediatamente em 0ms
+  if (!hasAuthCookie && isLoginPage) {
+    return NextResponse.next();
+  }
+
+  // Se não tem cookie de auth e tenta acessar rota protegida, redireciona para /login em 0ms
+  if (!hasAuthCookie && !isLoginPage) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // 2. Otimização para Prefetches do Next.js:
+  // Se já possui cookie e é apenas um prefetch de página interna, libera em 0ms sem bloquear no Supabase
+  if (isPrefetch && !isLoginPage) {
+    return NextResponse.next();
+  }
+
+  // 3. Verificação de Sessão (Apenas para navegações reais com cookie)
   let response = NextResponse.next({
     request: { headers: request.headers },
   });
@@ -35,8 +67,6 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isLoginPage = request.nextUrl.pathname === "/login";
-
   if (user && !isDono(user.id)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
@@ -58,6 +88,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
