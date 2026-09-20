@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { signOut } from "./actions";
 import { BottomNav } from "./bottom-nav";
-import { CopilotoDrawer } from "@/components/copiloto-drawer";
 import { obterQtdCobrancasPendentesAlerta } from "@/lib/services/cobrancas";
 import { Dumbbell, LogOut } from "lucide-react";
 
@@ -55,9 +54,6 @@ export default async function AppLayout({
       <main className="mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-28">
         {children}
       </main>
-
-      {/* Copiloto Inteligente Claude (Drawer flutuante mobile) */}
-      <CopilotoDrawer />
 
       {/* Barra de navegação inferior estilo dock iOS */}
       <BottomNav qtdCobrancasAlerta={qtdCobrancasAlerta} />
