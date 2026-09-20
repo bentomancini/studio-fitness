@@ -2,6 +2,7 @@
 
 import { exigeDono } from "@/lib/exige-login";
 import { dataHoje, diaDaSemana } from "@/lib/constantes";
+import { consumirAula, devolverAula } from "@/lib/services/planos";
 
 function apenasData(valor: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor : "";
@@ -95,12 +96,18 @@ export async function agendarAula(
     return { error: "Aula lotada. Cancele outro aluno ou aumente as vagas." };
   }
 
+  // Consome 1 aula do pacote mais antigo (se houver saldo).
+  const compraId = await consumirAula(alunoId);
+
   const { error } = await supabase.from("agendamentos").insert({
     aula_id: aulaId,
     aluno_id: alunoId,
     data: dataLimpa,
+    consumiu_aula: compraId !== null,
+    compra_id: compraId,
   });
   if (error) {
+    if (compraId) await devolverAula(compraId);
     if (error.code === "23505") {
       return { error: "Esse aluno já está agendado nesta aula." };
     }
