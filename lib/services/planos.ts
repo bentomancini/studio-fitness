@@ -1,7 +1,7 @@
 "use server";
 
 import { exigeDono } from "@/lib/exige-login";
-import { apenasData, dataHoje } from "@/lib/constantes";
+import { dataHoje } from "@/lib/constantes";
 
 export type Plano = {
   id: string;

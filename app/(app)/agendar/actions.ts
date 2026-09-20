@@ -19,7 +19,10 @@ export async function agendarAula(
   void _prev;
   void _formData;
   const resultado = await agendarAulaService(aulaId, alunoId, data);
-  if (resultado.ok) revalidatePath("/agendar");
+  if (resultado.ok) {
+    revalidatePath("/agendar");
+    revalidatePath("/");
+  }
   return resultado;
 }
 
@@ -33,6 +36,9 @@ export async function cancelarAgendamento(
   void _prev;
   void _formData;
   const resultado = await cancelarAgendamentoService(aulaId, alunoId, data);
-  if (resultado.ok) revalidatePath("/agendar");
+  if (resultado.ok) {
+    revalidatePath("/agendar");
+    revalidatePath("/");
+  }
   return resultado;
 }

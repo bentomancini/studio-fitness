@@ -53,7 +53,30 @@ export async function agendarAula(
     return { error: "Não é possível agendar uma aula no passado." };
   }
 
-  const aula = await carregarAula(supabase, aulaId);
+  // Executa todas as checagens em paralelo para máxima velocidade
+  const [aula, aluno, suspensaRes, existenteRes, countRes] = await Promise.all([
+    carregarAula(supabase, aulaId),
+    carregarAluno(supabase, alunoId),
+    supabase
+      .from("aulas_suspensas")
+      .select("id")
+      .eq("aula_id", aulaId)
+      .eq("data", dataLimpa)
+      .maybeSingle(),
+    supabase
+      .from("agendamentos")
+      .select("id")
+      .eq("aula_id", aulaId)
+      .eq("aluno_id", alunoId)
+      .eq("data", dataLimpa)
+      .maybeSingle(),
+    supabase
+      .from("agendamentos")
+      .select("id", { count: "exact", head: true })
+      .eq("aula_id", aulaId)
+      .eq("data", dataLimpa),
+  ]);
+
   if (!aula || !aula.ativo) {
     return { error: "Essa aula não está disponível." };
   }
@@ -61,38 +84,19 @@ export async function agendarAula(
     return { error: "Essa aula não acontece no dia escolhido." };
   }
 
-  const aluno = await carregarAluno(supabase, alunoId);
   if (!aluno || aluno.status !== "ativo") {
     return { error: "Aluno não encontrado ou inativo." };
   }
 
-  const { data: suspensa } = await supabase
-    .from("aulas_suspensas")
-    .select("id")
-    .eq("aula_id", aulaId)
-    .eq("data", dataLimpa)
-    .maybeSingle();
-  if (suspensa) {
+  if (suspensaRes.data) {
     return { error: "Essa aula está suspensa nesta data." };
   }
 
-  const { data: existente } = await supabase
-    .from("agendamentos")
-    .select("id")
-    .eq("aula_id", aulaId)
-    .eq("aluno_id", alunoId)
-    .eq("data", dataLimpa)
-    .maybeSingle();
-  if (existente) {
+  if (existenteRes.data) {
     return { error: "Esse aluno já está agendado nesta aula." };
   }
 
-  const { count } = await supabase
-    .from("agendamentos")
-    .select("id", { count: "exact", head: true })
-    .eq("aula_id", aulaId)
-    .eq("data", dataLimpa);
-  if ((count ?? 0) >= aula.limite_vagas) {
+  if ((countRes.count ?? 0) >= aula.limite_vagas) {
     return { error: "Aula lotada. Cancele outro aluno ou aumente as vagas." };
   }
 
@@ -106,6 +110,7 @@ export async function agendarAula(
     consumiu_aula: compraId !== null,
     compra_id: compraId,
   });
+
   if (error) {
     if (compraId) await devolverAula(compraId);
     if (error.code === "23505") {
@@ -129,15 +134,31 @@ export async function cancelarAgendamento(
     return { error: "Informações do agendamento inválidas." };
   }
 
-  const { data: removidos, error } = await supabase
+  // Busca o agendamento para verificar compra_id e devolver aula ao pacote
+  const { data: agendamento } = await supabase
     .from("agendamentos")
-    .delete()
+    .select("id, consumiu_aula, compra_id")
     .eq("aula_id", aulaId)
     .eq("aluno_id", alunoId)
     .eq("data", dataLimpa)
-    .select("id");
-  if (error || !removidos || removidos.length === 0) {
+    .maybeSingle();
+
+  if (!agendamento) {
     return { error: "Agendamento não encontrado." };
+  }
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .delete()
+    .eq("id", agendamento.id);
+
+  if (error) {
+    return { error: "Não foi possível cancelar o agendamento." };
+  }
+
+  // Se consumiu aula de um pacote, devolve o crédito imediatamente
+  if (agendamento.consumiu_aula && agendamento.compra_id) {
+    await devolverAula(agendamento.compra_id);
   }
 
   return { ok: true };

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import {
   dataHoje,
   diaDaSemana,
@@ -9,6 +9,20 @@ import {
   formatoHorario,
 } from "@/lib/constantes";
 import { agendarAula, cancelarAgendamento, EstadoAcao } from "./actions";
+import { showToast } from "@/components/toast";
+import {
+  User,
+  Calendar,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  AlertCircle,
+  XCircle,
+  Plus,
+  Loader2,
+  Users,
+} from "lucide-react";
 
 type Aula = {
   id: string;
@@ -24,7 +38,40 @@ type Agendamento = { aula_id: string; aluno_id: string; data: string };
 
 type Suspensao = { aula_id: string; data: string };
 
-export function Agendamento({ alunos, aulas, agendamentos, suspensoes }: {
+function adicionarDias(data: string, dias: number) {
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const dt = new Date(ano, mes - 1, dia + dias);
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const d = String(dt.getDate()).padStart(2, "0");
+  return `${dt.getFullYear()}-${m}-${d}`;
+}
+
+function formatarDataMobile(data: string, hoje: string) {
+  const [, mes, dia] = data.split("-").map(Number);
+  const nomesSemanaCurto = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const nomesMesCurto = [
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+  ];
+  const diaSemanaIdx = diaDaSemana(data);
+  const dNum = String(dia).padStart(2, "0");
+
+  if (data === hoje) {
+    return `Hoje · ${nomesSemanaCurto[diaSemanaIdx]}, ${dNum} ${nomesMesCurto[mes - 1]}`;
+  }
+  const amanha = adicionarDias(hoje, 1);
+  if (data === amanha) {
+    return `Amanhã · ${nomesSemanaCurto[diaSemanaIdx]}, ${dNum} ${nomesMesCurto[mes - 1]}`;
+  }
+  return `${nomesSemanaCurto[diaSemanaIdx]}, ${dNum} de ${nomesMesCurto[mes - 1]}`;
+}
+
+export function Agendamento({
+  alunos,
+  aulas,
+  agendamentos,
+  suspensoes,
+}: {
   alunos: Aluno[];
   aulas: Aula[];
   agendamentos: Agendamento[];
@@ -32,67 +79,182 @@ export function Agendamento({ alunos, aulas, agendamentos, suspensoes }: {
 }) {
   const [alunoId, setAlunoId] = useState(alunos[0]?.id ?? "");
   const [data, setData] = useState(dataHoje());
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const weekday = diaDaSemana(data);
   const doDia = aulas
     .filter((a) => a.dia_semana === weekday)
     .sort((a, b) => a.horario.localeCompare(b.horario));
 
+  const hoje = dataHoje();
+  const amanha = adicionarDias(hoje, 1);
+
+  const abrirSeletorData = () => {
+    const el = inputRef.current;
+    if (!el) return;
+    try {
+      const picker = (el as unknown as { showPicker?: () => void }).showPicker;
+      if (typeof picker === "function") {
+        picker.call(el);
+      } else {
+        el.focus();
+      }
+    } catch {
+      el.focus();
+    }
+  };
+
   if (alunos.length === 0) {
     return (
-      <div className="flex flex-col gap-4">
-        <p className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-zinc-600">
-          Cadastre um aluno ativo para começar a agendar.
+      <div className="glass-panel flex flex-col items-center justify-center rounded-3xl p-8 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-900 text-zinc-500 border border-white/5">
+          <User className="h-7 w-7 stroke-[1.5]" />
+        </div>
+        <h3 className="text-base font-semibold text-white">
+          Nenhum aluno ativo encontrado
+        </h3>
+        <p className="mt-1 text-xs text-zinc-400">
+          Cadastre ou ative um aluno para poder realizar agendamentos nas aulas.
         </p>
         <Link
           href="/alunos/novo"
-          className="flex min-h-12 items-center justify-center rounded-xl bg-zinc-900 text-base font-semibold text-white"
+          className="btn-press mt-5 flex min-h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 px-6 text-sm font-semibold text-zinc-950 shadow-md shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all"
         >
-          Cadastrar aluno
+          <Plus className="h-4 w-4 stroke-[2.5]" />
+          Cadastrar novo aluno
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Aluno</span>
+    <div className="flex flex-col gap-5">
+      {/* Formulário de Seleção (Aluno e Data) */}
+      <div className="glass-panel rounded-3xl p-4 sm:p-5 border border-white/10 flex flex-col gap-4 shadow-lg shadow-black/30">
+        {/* Seleção do Aluno */}
+        <label className="flex flex-col gap-1.5">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <User className="h-3.5 w-3.5 text-emerald-400" />
+            Aluno
+          </span>
           <select
             value={alunoId}
             onChange={(e) => setAlunoId(e.target.value)}
-            className="h-12 rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-900"
+            className="h-12 rounded-xl border border-white/10 bg-zinc-900/90 px-4 text-sm font-semibold text-white transition-colors focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 cursor-pointer"
           >
             {alunos.map((a) => (
-              <option key={a.id} value={a.id} className="text-zinc-900">
-                {a.nome}
+              <option key={a.id} value={a.id} className="bg-zinc-900 text-white">
+                {a.nome} {a.telefone ? `(${a.telefone})` : ""}
               </option>
             ))}
           </select>
         </label>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Data *</span>
-          <input
-            type="date"
-            value={data}
-            min={dataHoje()}
-            onChange={(e) => setData(e.target.value)}
-            className="h-12 rounded-xl border border-zinc-300 px-4 text-base"
-          />
-        </label>
+        {/* Seleção de Data — Card Unificado, acessível e sem sobreposição */}
+        <div className="flex flex-col gap-1.5">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+            Data da Aula
+          </span>
+          <div className="flex flex-col gap-2 rounded-2xl border border-white/5 bg-zinc-900/60 p-2">
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                disabled={data <= hoje}
+                onClick={() => setData(adicionarDias(data, -1))}
+                aria-label="Dia anterior"
+                className="btn-press flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200 hover:bg-zinc-700 active:scale-90 transition-all border border-white/10 disabled:opacity-30 disabled:pointer-events-none"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div className="relative flex min-h-11 flex-1 items-center justify-center rounded-xl bg-zinc-900/90 px-3 border border-white/10 hover:border-emerald-500/40 transition-colors">
+                <input
+                  ref={inputRef}
+                  type="date"
+                  value={data}
+                  min={hoje}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setData(e.target.value);
+                      showToast(`Data: ${formatarData(e.target.value)}`, "info");
+                    }
+                  }}
+                  className="absolute inset-0 z-20 h-full w-full opacity-0 cursor-pointer"
+                  aria-label="Selecionar data no calendário"
+                />
+                <button
+                  type="button"
+                  onClick={abrirSeletorData}
+                  className="btn-press flex items-center gap-2 text-center"
+                >
+                  <Calendar className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span className="text-xs sm:text-sm font-bold tracking-tight text-white truncate">
+                    {formatarDataMobile(data, hoje)}
+                  </span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setData(adicionarDias(data, 1))}
+                aria-label="Próximo dia"
+                className="btn-press flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-zinc-200 hover:bg-zinc-700 active:scale-90 transition-all border border-white/10"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Atalhos Rápidos */}
+            <div className="grid grid-cols-2 gap-1.5 border-t border-white/5 pt-1.5">
+              <button
+                type="button"
+                onClick={() => setData(hoje)}
+                className={`btn-press flex min-h-[38px] items-center justify-center rounded-xl text-xs font-bold transition-all ${
+                  data === hoje
+                    ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
+                    : "border border-white/10 bg-zinc-800/80 text-emerald-400 hover:bg-zinc-800"
+                }`}
+              >
+                Hoje
+              </button>
+              <button
+                type="button"
+                onClick={() => setData(amanha)}
+                className={`btn-press flex min-h-[38px] items-center justify-center rounded-xl text-xs font-semibold transition-all ${
+                  data === amanha
+                    ? "bg-emerald-500 text-zinc-950 shadow-md shadow-emerald-500/20"
+                    : "border border-white/5 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Amanhã
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Lista de Aulas no Dia Selecionado */}
       <div>
-        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-          Aulas de {formatarData(data)}
-        </h2>
+        <div className="mb-2.5 flex items-center justify-between px-1">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+            Aulas em {formatarData(data)}
+          </h2>
+          <span className="text-xs text-zinc-500">
+            {doDia.length} {doDia.length === 1 ? "horário" : "horários"}
+          </span>
+        </div>
 
         {doDia.length === 0 ? (
-          <p className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-zinc-600">
-            Não há aulas neste dia.
-          </p>
+          <div className="glass-panel flex flex-col items-center justify-center rounded-3xl p-8 text-center">
+            <Clock className="mb-2 h-7 w-7 text-zinc-600 stroke-[1.5]" />
+            <p className="text-sm font-semibold text-zinc-300">
+              Não há aulas cadastradas nesta data
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Escolha outro dia ou cadastre novas aulas para este dia da semana.
+            </p>
+          </div>
         ) : (
           <ul className="flex flex-col gap-3">
             {doDia.map((aula) => {
@@ -109,41 +271,111 @@ export function Agendamento({ alunos, aulas, agendamentos, suspensoes }: {
                   g.data === data
               );
               const lotada = ocupadas >= aula.limite_vagas;
+              const porcentagem = Math.min(
+                100,
+                Math.round((ocupadas / aula.limite_vagas) * 100)
+              );
 
               return (
-                <li key={aula.id} className="rounded-xl border border-zinc-200 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{aula.tipo_aula}</p>
-                      <p className="text-sm text-zinc-600">
-                        {formatoHorario(aula.horario)} · {ocupadas}/
-                        {aula.limite_vagas} vagas
-                      </p>
+                <li
+                  key={aula.id}
+                  className={`glass-panel interactive-card relative overflow-hidden rounded-3xl p-4 border transition-all ${
+                    agendado
+                      ? "border-emerald-500/50 bg-emerald-950/20 shadow-lg shadow-emerald-500/5"
+                      : suspensa
+                      ? "border-red-500/20 bg-red-950/10 opacity-70"
+                      : lotada
+                      ? "border-amber-500/20"
+                      : "border-white/10 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="shrink-0 flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-400">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{formatoHorario(aula.horario)}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold tracking-tight text-white truncate">
+                          {aula.tipo_aula}
+                        </h3>
+                      </div>
                     </div>
+
                     <span
-                      className={
-                        suspensa
-                          ? "rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700"
+                      className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
+                        agendado
+                          ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300"
+                          : suspensa
+                          ? "border-red-500/30 bg-red-500/15 text-red-300"
                           : lotada
-                            ? "rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700"
-                            : "rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
-                      }
+                          ? "border-amber-500/30 bg-amber-500/15 text-amber-300"
+                          : "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
+                      }`}
                     >
-                      {suspensa ? "Suspensa" : lotada ? "Lotada" : "Disponível"}
+                      {agendado ? (
+                        <>
+                          <CheckCircle2 className="h-3 w-3" />
+                          Agendado
+                        </>
+                      ) : suspensa ? (
+                        "Suspensa"
+                      ) : lotada ? (
+                        "Lotada"
+                      ) : (
+                        "Disponível"
+                      )}
                     </span>
                   </div>
 
-                  <div className="mt-3 border-t border-zinc-100 pt-3">
+                  {/* Barra de Ocupação */}
+                  <div className="mt-3.5 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs text-zinc-400">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3 text-zinc-500" />
+                        {ocupadas} de {aula.limite_vagas} vagas ocupadas
+                      </span>
+                      <span className="font-medium text-zinc-500">
+                        {porcentagem}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          agendado
+                            ? "bg-emerald-400"
+                            : lotada
+                            ? "bg-amber-400"
+                            : "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                        }`}
+                        style={{ width: `${porcentagem}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ação: Agendar ou Cancelar com confirmação inline instantânea */}
+                  <div className="mt-3.5 border-t border-white/5 pt-3">
                     {agendado ? (
-                      <AcaoCancelar aulaId={aula.id} alunoId={alunoId} data={data} />
+                      <AcaoCancelar
+                        aulaId={aula.id}
+                        alunoId={alunoId}
+                        data={data}
+                      />
                     ) : suspensa || lotada ? (
-                      <p className="flex min-h-11 items-center text-sm text-zinc-500">
-                        {suspensa
-                          ? "Aula suspensa nesta data."
-                          : "Aula lotada, sem vagas."}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <AlertCircle className="h-4 w-4 text-zinc-500 shrink-0" />
+                        <span>
+                          {suspensa
+                            ? "Esta aula foi suspensa nesta data."
+                            : "Turma lotada. Não há vagas livres."}
+                        </span>
+                      </div>
                     ) : (
-                      <AcaoAgendar aulaId={aula.id} alunoId={alunoId} data={data} />
+                      <AcaoAgendar
+                        aulaId={aula.id}
+                        alunoId={alunoId}
+                        data={data}
+                      />
                     )}
                   </div>
                 </li>
@@ -156,13 +388,25 @@ export function Agendamento({ alunos, aulas, agendamentos, suspensoes }: {
   );
 }
 
-function AcaoAgendar({ aulaId, alunoId, data }: {
+function AcaoAgendar({
+  aulaId,
+  alunoId,
+  data,
+}: {
   aulaId: string;
   alunoId: string;
   data: string;
 }) {
   const [state, formAction, pending] = useActionState<EstadoAcao, FormData>(
-    agendarAula.bind(null, aulaId, alunoId, data),
+    async (prevState, formData) => {
+      const res = await agendarAula(aulaId, alunoId, data, prevState, formData);
+      if (res.ok) {
+        showToast("Aluno agendado com sucesso! Saldo atualizado.", "success");
+      } else if (res.error) {
+        showToast(res.error, "error");
+      }
+      return res;
+    },
     {}
   );
 
@@ -172,51 +416,108 @@ function AcaoAgendar({ aulaId, alunoId, data }: {
         <button
           type="submit"
           disabled={pending}
-          className="min-h-11 rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white disabled:opacity-50"
+          className="btn-press flex h-12 w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 px-6 text-xs font-bold text-zinc-950 shadow-lg shadow-emerald-500/25 hover:brightness-110 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
         >
-          {pending ? "Agendando..." : "Agendar"}
+          {pending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Confirmando vaga com o estúdio...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 stroke-[2.5]" />
+              <span>Agendar aluno nesta aula</span>
+            </>
+          )}
         </button>
       </form>
-      {state?.ok && (
-        <p className="text-sm font-medium text-green-700">Agendado com sucesso.</p>
-      )}
       {state?.error && (
-        <p className="text-sm text-red-700" role="alert">
-          {state.error}
-        </p>
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-950/40 px-3 py-2 text-xs font-medium text-red-300">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{state.error}</span>
+        </div>
       )}
     </div>
   );
 }
 
-function AcaoCancelar({ aulaId, alunoId, data }: {
+function AcaoCancelar({
+  aulaId,
+  alunoId,
+  data,
+}: {
   aulaId: string;
   alunoId: string;
   data: string;
 }) {
+  const [confirmando, setConfirmando] = useState(false);
   const [state, formAction, pending] = useActionState<EstadoAcao, FormData>(
-    cancelarAgendamento.bind(null, aulaId, alunoId, data),
+    async (prevState, formData) => {
+      const res = await cancelarAgendamento(aulaId, alunoId, data, prevState, formData);
+      if (res.ok) {
+        showToast("Agendamento cancelado! Aula devolvida ao saldo.", "success");
+        setConfirmando(false);
+      } else if (res.error) {
+        showToast(res.error, "error");
+      }
+      return res;
+    },
     {}
   );
 
+  if (confirmando) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl border border-red-500/25 bg-red-950/30 p-3">
+        <p className="text-xs font-medium text-red-200">
+          Deseja cancelar o agendamento? O crédito de aula será estornado.
+        </p>
+        <div className="flex items-center gap-2">
+          <form action={formAction}>
+            <button
+              type="submit"
+              disabled={pending}
+              className="btn-press flex h-9 items-center gap-1.5 rounded-xl bg-red-600 px-3.5 text-xs font-bold text-white shadow-md shadow-red-950/50 disabled:opacity-50"
+            >
+              {pending ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Cancelando...</span>
+                </>
+              ) : (
+                "Sim, cancelar"
+              )}
+            </button>
+          </form>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setConfirmando(false)}
+            className="btn-press flex h-9 items-center rounded-xl border border-white/10 px-3 text-xs text-zinc-300 hover:text-white"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      <form action={formAction}>
-        <button
-          type="submit"
-          disabled={pending}
-          className="min-h-11 rounded-xl border border-red-200 px-4 text-sm font-medium text-red-600 disabled:opacity-50"
-        >
-          {pending ? "Cancelando..." : "Cancelar agendamento"}
-        </button>
-      </form>
-      {state?.ok && (
-        <p className="text-sm font-medium text-green-700">Agendamento cancelado.</p>
-      )}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => setConfirmando(true)}
+        className="btn-press flex h-10 w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-950/30 px-4 text-xs font-semibold text-red-300 hover:bg-red-900/40 active:scale-98 transition-all disabled:opacity-50"
+      >
+        <XCircle className="h-3.5 w-3.5" />
+        <span>Cancelar agendamento</span>
+      </button>
+
       {state?.error && (
-        <p className="text-sm text-red-700" role="alert">
-          {state.error}
-        </p>
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-950/40 px-3 py-2 text-xs font-medium text-red-300">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{state.error}</span>
+        </div>
       )}
     </div>
   );

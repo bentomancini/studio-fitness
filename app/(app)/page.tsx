@@ -8,7 +8,15 @@ export default async function AppHome() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold">Agenda</h1>
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-white">
+          Agenda do Estúdio
+        </h1>
+        <p className="text-xs text-zinc-400">
+          Horários, ocupação de vagas e alunos confirmados
+        </p>
+      </div>
+
       <Agenda
         aulas={aulas}
         alunos={alunos}

@@ -1,64 +1,54 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { signOut } from "./actions";
+import { BottomNav } from "./bottom-nav";
+import { Dumbbell, LogOut } from "lucide-react";
 
 export default async function AppLayout({
   children,
-}: LayoutProps<"/">) {
+}: {
+  children: React.ReactNode;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   return (
-    <div className="flex h-full min-h-dvh flex-1 flex-col">
-      {/* Cabeçalho: só o essencial para não roubar espaço vertical */}
-      <header className="flex items-center justify-between border-b border-zinc-200 px-5 pt-[env(safe-area-inset-top)]">
-        <span className="py-3 text-base font-semibold">Studio Fitness</span>
+    <div className="flex h-full min-h-dvh flex-1 flex-col bg-zinc-950 text-zinc-100">
+      {/* Cabeçalho translúcido moderno */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-zinc-950/80 px-4 py-2.5 pt-[calc(env(safe-area-inset-top)+0.6rem)] backdrop-blur-xl">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/20">
+            <Dumbbell className="h-4 w-4 stroke-[2.5]" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold tracking-tight text-white">
+              Studio Fitness
+            </span>
+            <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+              Admin
+            </span>
+          </div>
+        </div>
+
         <form action={signOut}>
           <button
             type="submit"
-            className="min-h-11 rounded-xl px-4 text-sm font-medium text-zinc-600"
+            aria-label="Sair da conta"
+            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-900/70 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 active:scale-95"
           >
-            Sair
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Sair</span>
           </button>
         </form>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-24">{children}</main>
+      {/* Conteúdo principal com limite ergonômico no mobile */}
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-5 pb-28">
+        {children}
+      </main>
 
-      {/* Barra inferior de navegação (polegar no iPhone), com area segura */}
-      <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-zinc-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-        <div className="mx-auto flex max-w-md items-stretch gap-1 px-2 py-1">
-          <Link
-            href="/"
-            className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-semibold text-zinc-900"
-          >
-            <span aria-hidden className="text-lg leading-none">◆</span>
-            Hoje
-          </Link>
-          <Link
-            href="/agendar"
-            className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium text-zinc-500"
-          >
-            <span aria-hidden className="text-lg leading-none">＋</span>
-            Agendar
-          </Link>
-          <Link
-            href="/alunos"
-            className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium text-zinc-500"
-          >
-            <span aria-hidden className="text-lg leading-none">👥</span>
-            Alunos
-          </Link>
-          <Link
-            href="/aulas"
-            className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl text-xs font-medium text-zinc-500"
-          >
-            <span aria-hidden className="text-lg leading-none">⏱</span>
-            Aulas
-          </Link>
-        </div>
-      </nav>
+      {/* Barra de navegação inferior estilo dock iOS */}
+      <BottomNav />
     </div>
   );
 }
