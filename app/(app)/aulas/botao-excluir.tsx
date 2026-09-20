@@ -1,11 +1,11 @@
 "use client";
 
-import { removerAula } from "./actions";
+import { removerAulaAction } from "./actions";
 
 export function BotaoExcluirAula({ id }: { id: string }) {
   return (
     <form
-      action={removerAula.bind(null, id)}
+      action={removerAulaAction.bind(null, id)}
       onSubmit={(e) => {
         if (!confirm("Excluir esta aula/horário?")) {
           e.preventDefault();

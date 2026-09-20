@@ -1,0 +1,11 @@
+
+> studio-fitness@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.5 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.188.37.74:3000
+- Environments: .env.local
+✓ Ready in 703ms
+✓ Running next.config.ts took 57ms
+

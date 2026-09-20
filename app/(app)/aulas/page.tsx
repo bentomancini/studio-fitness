@@ -1,4 +1,4 @@
-import { exigeLogin } from "@/lib/exige-login";
+import { listarAulas } from "@/lib/services/aulas";
 import { DIAS_SEMANA, formatoHorario } from "@/lib/constantes";
 import Link from "next/link";
 import { alternarAtiva } from "./actions";
@@ -16,17 +16,11 @@ type Aula = {
 };
 
 export default async function AulasPage() {
-  const supabase = await exigeLogin();
-
-  const { data: aulas } = await supabase
-    .from("aulas")
-    .select("id, tipo_aula, dia_semana, horario, limite_vagas, ativo")
-    .order("dia_semana")
-    .order("horario");
+  const aulas = await listarAulas();
 
   const porDia = Array.from({ length: 7 }, (_, i) => ({
     dia: i,
-    aulas: (aulas ?? []).filter((a: Aula) => a.dia_semana === i),
+    aulas: aulas.filter((a: Aula) => a.dia_semana === i),
   }));
 
   return (
@@ -41,7 +35,7 @@ export default async function AulasPage() {
         </Link>
       </div>
 
-      {!aulas || aulas.length === 0 ? (
+      {aulas.length === 0 ? (
         <p className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-zinc-600">
           Nenhum horário de aula cadastrado ainda.
         </p>

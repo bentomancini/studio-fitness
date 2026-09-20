@@ -1,4 +1,4 @@
-import { exigeLogin } from "@/lib/exige-login";
+import { buscarAluno } from "@/lib/services/alunos";
 import { notFound } from "next/navigation";
 import { AlunoForm } from "../aluno-form";
 
@@ -8,13 +8,7 @@ export default async function EditarAlunoPage({
   params,
 }: PageProps<"/alunos/[id]">) {
   const { id } = await params;
-  const supabase = await exigeLogin();
-
-  const { data: aluno } = await supabase
-    .from("alunos")
-    .select("id, nome, telefone, observacoes, status")
-    .eq("id", id)
-    .single();
+  const aluno = await buscarAluno(id);
 
   if (!aluno) notFound();
 

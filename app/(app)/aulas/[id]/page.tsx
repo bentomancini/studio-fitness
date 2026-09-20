@@ -1,4 +1,4 @@
-import { exigeLogin } from "@/lib/exige-login";
+import { buscarAula } from "@/lib/services/aulas";
 import { notFound } from "next/navigation";
 import { AulaForm } from "../aula-form";
 
@@ -8,13 +8,7 @@ export default async function EditarAulaPage({
   params,
 }: PageProps<"/aulas/[id]">) {
   const { id } = await params;
-  const supabase = await exigeLogin();
-
-  const { data: aula } = await supabase
-    .from("aulas")
-    .select("id, tipo_aula, dia_semana, horario, limite_vagas")
-    .eq("id", id)
-    .single();
+  const aula = await buscarAula(id);
 
   if (!aula) notFound();
 

@@ -1,4 +1,4 @@
-import { exigeLogin } from "@/lib/exige-login";
+import { listarAlunos } from "@/lib/services/alunos";
 import Link from "next/link";
 import { alternarStatus } from "./actions";
 import { BotaoExcluirAluno } from "./botao-excluir";
@@ -6,12 +6,7 @@ import { BotaoExcluirAluno } from "./botao-excluir";
 export const metadata = { title: "Alunos" };
 
 export default async function AlunosPage() {
-  const supabase = await exigeLogin();
-
-  const { data: alunos } = await supabase
-    .from("alunos")
-    .select("id, nome, telefone, status")
-    .order("nome");
+  const alunos = await listarAlunos();
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,7 +20,7 @@ export default async function AlunosPage() {
         </Link>
       </div>
 
-      {!alunos || alunos.length === 0 ? (
+      {alunos.length === 0 ? (
         <p className="rounded-xl bg-zinc-50 px-4 py-6 text-center text-zinc-600">
           Nenhum aluno cadastrado ainda.
         </p>
