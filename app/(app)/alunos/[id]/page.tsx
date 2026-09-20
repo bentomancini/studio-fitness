@@ -1,5 +1,14 @@
 import { buscarAluno, calcularIdade } from "@/lib/services/alunos";
 import { saldoDoAluno } from "@/lib/services/planos";
+import {
+  obterResumoCobrancaAluno,
+  obterConfiguracoesCobranca,
+} from "@/lib/services/cobrancas";
+import {
+  gerarLinkWhatsApp,
+  formatarValorBRL,
+  formatarDataBR,
+} from "@/lib/services/whatsapp-cobranca";
 import { formatarData } from "@/lib/constantes";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -16,6 +25,11 @@ import {
   FileText,
   Ticket,
   User,
+  CircleDollarSign,
+  MessageCircle,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { BotaoExcluirAluno } from "../botao-excluir";
 
@@ -37,8 +51,13 @@ export default async function FichaAlunoPage({
 
   if (!aluno) notFound();
 
-  const idade = await calcularIdade(aluno.data_nascimento);
-  const saldo = await saldoDoAluno(aluno.id);
+  const [idade, saldo, resumoCobranca, configCobranca] = await Promise.all([
+    calcularIdade(aluno.data_nascimento),
+    saldoDoAluno(aluno.id),
+    obterResumoCobrancaAluno(aluno.id),
+    obterConfiguracoesCobranca(),
+  ]);
+
   const isAtivo = aluno.status === "ativo";
   const telLimpo = aluno.telefone ? aluno.telefone.replace(/\D/g, "") : "";
   const linkWhats =
@@ -293,6 +312,219 @@ export default async function FichaAlunoPage({
             <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
               {aluno.observacoes}
             </p>
+          </div>
+        )}
+      </section>
+
+      {/* ========================================================= */}
+      {/* BLOCO 4: ACORDO FINANCEIRO & COBRANÇAS */}
+      {/* ========================================================= */}
+      <section className="glass-panel rounded-3xl p-5 border border-emerald-500/20 flex flex-col gap-3.5 bg-gradient-to-b from-emerald-950/15 to-transparent">
+        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
+            <CircleDollarSign className="h-4 w-4" />
+            <span>Acordo de Mensalidade & Cobranças</span>
+          </div>
+
+          <Link
+            href="/cobrancas"
+            className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+          >
+            <span>Painel</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+
+        {/* Resumo do Acordo */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="flex flex-col gap-1 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5">
+            <span className="text-[11px] font-medium text-zinc-400">
+              Valor da Mensalidade
+            </span>
+            <p className="text-base font-extrabold text-white">
+              {aluno.valor_mensalidade ? (
+                `R$ ${formatarValorBRL(aluno.valor_mensalidade)}`
+              ) : (
+                <span className="text-xs font-normal text-zinc-500">Não configurado</span>
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5">
+            <span className="text-[11px] font-medium text-zinc-400">
+              Vencimento Padrão
+            </span>
+            <p className="text-base font-extrabold text-white">
+              {aluno.dia_vencimento ? (
+                `Todo dia ${aluno.dia_vencimento}`
+              ) : (
+                <span className="text-xs font-normal text-zinc-500">Não configurado</span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Status da Mensalidade Atual */}
+        {resumoCobranca.pendente ? (
+          (() => {
+            const pendente = resumoCobranca.pendente;
+            const isAtrasado = resumoCobranca.situacao === "atrasado";
+            const isHoje = resumoCobranca.situacao === "hoje";
+
+            const templateMsg = isAtrasado
+              ? configCobranca.msg_atraso
+              : isHoje
+              ? configCobranca.msg_hoje
+              : configCobranca.msg_antecipada;
+
+            const linkWa = gerarLinkWhatsApp(aluno.telefone, {
+              nomeAluno: aluno.nome,
+              valor: pendente.valor,
+              dataVencimento: pendente.data_vencimento,
+              chavePix: configCobranca.chave_pix,
+              studioNome: configCobranca.studio_nome,
+              template: templateMsg,
+            });
+
+            return (
+              <div
+                className={`flex flex-col gap-3 rounded-2xl border p-4 ${
+                  isAtrasado
+                    ? "border-rose-500/30 bg-rose-950/20"
+                    : isHoje
+                    ? "border-amber-500/30 bg-amber-950/20"
+                    : "border-white/10 bg-zinc-900/60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isAtrasado ? (
+                      <AlertTriangle className="h-4 w-4 text-rose-400" />
+                    ) : isHoje ? (
+                      <Clock className="h-4 w-4 text-amber-400" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-zinc-400" />
+                    )}
+                    <span className="text-xs font-bold text-white">
+                      {isAtrasado
+                        ? "Mensalidade em Atraso"
+                        : isHoje
+                        ? "Mensalidade Vence Hoje"
+                        : "Próxima Mensalidade"}
+                    </span>
+                  </div>
+
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                      isAtrasado
+                        ? "border-rose-500/40 bg-rose-500/20 text-rose-300"
+                        : isHoje
+                        ? "border-amber-500/40 bg-amber-500/20 text-amber-300"
+                        : "border-white/10 bg-zinc-800 text-zinc-300"
+                    }`}
+                  >
+                    Venc.: {formatarDataBR(pendente.data_vencimento)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-lg font-extrabold text-white">
+                    R$ {formatarValorBRL(pendente.valor)}
+                  </span>
+
+                  {linkWa.url && linkWa.telefoneValido ? (
+                    <a
+                      href={linkWa.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-press flex items-center gap-1.5 rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition-colors"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5" />
+                      <span>Cobrar no WhatsApp</span>
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })()
+        ) : resumoCobranca.pagaMesAtual ? (
+          <div className="flex items-center justify-between rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-emerald-300">
+                  Mensalidade deste mês PAGA
+                </span>
+                <span className="text-[11px] text-zinc-400">
+                  {resumoCobranca.pagaMesAtual.data_pagamento
+                    ? `Pago em ${formatarDataBR(resumoCobranca.pagaMesAtual.data_pagamento)}`
+                    : "Pago"}
+                </span>
+              </div>
+            </div>
+
+            <span className="text-sm font-extrabold text-emerald-300">
+              R$ {formatarValorBRL(resumoCobranca.pagaMesAtual.valor)}
+            </span>
+          </div>
+        ) : (
+          !aluno.valor_mensalidade && (
+            <div className="rounded-2xl border border-dashed border-white/10 bg-zinc-900/40 p-4 text-center text-xs text-zinc-400">
+              <p>Nenhum acordo financeiro cadastrado para este aluno.</p>
+              <Link
+                href={`/alunos/${aluno.id}/editar`}
+                className="mt-2 inline-block font-semibold text-emerald-400 hover:underline"
+              >
+                Configurar mensalidade e vencimento →
+              </Link>
+            </div>
+          )
+        )}
+
+        {/* Histórico Recente de Cobranças */}
+        {resumoCobranca.cobrancas.length > 0 && (
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+            <span className="text-[11px] font-semibold text-zinc-400">
+              Histórico recente de mensalidades:
+            </span>
+            <div className="flex flex-col gap-1.5">
+              {resumoCobranca.cobrancas.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center justify-between rounded-xl bg-zinc-900/50 px-3 py-2 text-xs border border-white/5"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-2 w-2 rounded-full ${
+                        c.status === "pago"
+                          ? "bg-emerald-400"
+                          : c.status === "pendente"
+                          ? "bg-amber-400"
+                          : "bg-zinc-600"
+                      }`}
+                    />
+                    <span className="text-zinc-300">
+                      {c.titulo} ({formatarDataBR(c.data_vencimento)})
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">
+                      R$ {formatarValorBRL(c.valor)}
+                    </span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase ${
+                        c.status === "pago"
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : "bg-amber-500/15 text-amber-400"
+                      }`}
+                    >
+                      {c.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>

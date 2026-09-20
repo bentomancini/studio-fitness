@@ -626,3 +626,59 @@ export async function obterQtdCobrancasPendentesAlerta(): Promise<number> {
   if (error) return 0;
   return count ?? 0;
 }
+
+/**
+ * Retorna as cobranças recentes de um aluno e o status da sua mensalidade atual.
+ * Útil para a tela de perfil e ficha do aluno.
+ */
+export async function obterResumoCobrancaAluno(alunoId: string) {
+  const supabase = await exigeDono();
+  const hoje = dataHoje();
+  const mesAtualRef = hoje.slice(0, 7);
+
+  const { data: cobrancas } = await supabase
+    .from("cobrancas")
+    .select(
+      "id, titulo, valor, data_vencimento, status, data_pagamento, forma_pagamento, tipo, qtd_contatos, ultimo_contato_em, mes_referencia"
+    )
+    .eq("aluno_id", alunoId)
+    .neq("status", "cancelado")
+    .order("data_vencimento", { ascending: false })
+    .limit(6);
+
+  const lista = (cobrancas ?? []).map((c) => ({
+    ...c,
+    valor: Number(c.valor),
+  }));
+
+  // Cobrança pendente prioritária
+  const pendente = lista.find((c) => c.status === "pendente");
+  // Pagamento recente no mês atual
+  const pagaMesAtual = lista.find(
+    (c) =>
+      c.status === "pago" &&
+      ((c.data_pagamento && c.data_pagamento.startsWith(mesAtualRef)) ||
+        c.data_vencimento.startsWith(mesAtualRef))
+  );
+
+  let situacao: "atrasado" | "hoje" | "pendente" | "pago" | "sem_cobranca" = "sem_cobranca";
+
+  if (pendente) {
+    if (pendente.data_vencimento < hoje) {
+      situacao = "atrasado";
+    } else if (pendente.data_vencimento === hoje) {
+      situacao = "hoje";
+    } else {
+      situacao = "pendente";
+    }
+  } else if (pagaMesAtual) {
+    situacao = "pago";
+  }
+
+  return {
+    cobrancas: lista,
+    pendente,
+    pagaMesAtual,
+    situacao,
+  };
+}

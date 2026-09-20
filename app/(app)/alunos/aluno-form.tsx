@@ -18,6 +18,7 @@ import {
   Loader2,
   Check,
   AlertCircle,
+  CircleDollarSign,
 } from "lucide-react";
 import type { AlunoCompleto } from "@/lib/services/alunos";
 
@@ -388,6 +389,61 @@ export function AlunoForm({ aluno }: { aluno?: AlunoCompleto | null }) {
             </option>
           </select>
         </label>
+      </section>
+
+      {/* ========================================================= */}
+      {/* BLOCO 4: ACORDO DE MENSALIDADE (COBRANÇAS) */}
+      {/* ========================================================= */}
+      <section className="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col gap-4 shadow-lg shadow-black/20">
+        <div className="flex items-center gap-2.5 border-b border-white/5 pb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-400">
+            <CircleDollarSign className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white">4. Acordo de Mensalidade (Cobrança)</h2>
+            <p className="text-[11px] text-zinc-400">
+              Valor e dia de vencimento para controle e mensagens do WhatsApp
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Valor da Mensalidade */}
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-zinc-300">
+              Mensalidade (R$)
+            </span>
+            <input
+              type="number"
+              step="0.01"
+              min="1"
+              name="valor_mensalidade"
+              defaultValue={aluno?.valor_mensalidade ?? ""}
+              placeholder="Ex: 250,00"
+              className="h-12 min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/90 px-4 text-sm text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors"
+            />
+          </label>
+
+          {/* Dia de Vencimento */}
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-zinc-300">
+              Dia de Vencimento
+            </span>
+            <input
+              type="number"
+              min="1"
+              max="31"
+              name="dia_vencimento"
+              defaultValue={aluno?.dia_vencimento ?? ""}
+              placeholder="Ex: 10 (todo dia 10)"
+              className="h-12 min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/90 px-4 text-sm text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors"
+            />
+          </label>
+        </div>
+
+        <p className="text-[11px] text-zinc-400 leading-relaxed">
+          💡 Ao definir a mensalidade e o dia de vencimento, o sistema gera e agenda as cobranças do aluno na tela de Cobranças automaticamente a cada mês.
+        </p>
       </section>
 
       {/* Exibição de Erro do Servidor */}

@@ -21,6 +21,9 @@ export type DadosAluno = {
   lesoes: string;
   estilo_treino: string;
   descricao_aluno: string;
+  valor_mensalidade?: number | null;
+  dia_vencimento?: number | null;
+  plano_padrao_id?: string | null;
 };
 
 export type AlunoCompleto = DadosAluno & {
@@ -143,6 +146,30 @@ export async function lerAlunoDoForm(
     return { error: "As observações devem ter no máximo 2000 caracteres." };
   }
 
+  // Acordo Financeiro (opcional)
+  const valorMensalidadeRaw = String(formData.get("valor_mensalidade") ?? "").trim().replace(",", ".");
+  let valor_mensalidade: number | null = null;
+  if (valorMensalidadeRaw) {
+    const v = parseFloat(valorMensalidadeRaw);
+    if (isNaN(v) || v <= 0) {
+      return { error: "O valor da mensalidade deve ser maior que zero." };
+    }
+    valor_mensalidade = v;
+  }
+
+  const diaVencimentoRaw = String(formData.get("dia_vencimento") ?? "").trim();
+  let dia_vencimento: number | null = null;
+  if (diaVencimentoRaw) {
+    const d = parseInt(diaVencimentoRaw, 10);
+    if (isNaN(d) || d < 1 || d > 31) {
+      return { error: "O dia de vencimento deve estar entre 1 e 31." };
+    }
+    dia_vencimento = d;
+  }
+
+  const planoPadraoRaw = String(formData.get("plano_padrao_id") ?? "").trim();
+  const plano_padrao_id = planoPadraoRaw || null;
+
   return {
     nome,
     telefone,
@@ -158,6 +185,9 @@ export async function lerAlunoDoForm(
     lesoes,
     estilo_treino,
     descricao_aluno,
+    valor_mensalidade,
+    dia_vencimento,
+    plano_padrao_id,
   };
 }
 
@@ -172,6 +202,14 @@ export async function criarAluno(dados: DadosAluno) {
     .single();
 
   if (!error && data) {
+    if (dados.valor_mensalidade && dados.dia_vencimento && dados.status === "ativo") {
+      try {
+        const { sincronizarMensalidadesAlunos } = await import("@/lib/services/cobrancas");
+        await sincronizarMensalidadesAlunos();
+      } catch {
+        // Tolerância caso ocorra erro assíncrono na sincronização
+      }
+    }
     return { ok: true, id: data.id };
   }
 
@@ -206,6 +244,14 @@ export async function atualizarAluno(id: string, dados: DadosAluno) {
 
   const { error } = await supabase.from("alunos").update(dados).eq("id", id);
   if (!error) {
+    if (dados.valor_mensalidade && dados.dia_vencimento && dados.status === "ativo") {
+      try {
+        const { sincronizarMensalidadesAlunos } = await import("@/lib/services/cobrancas");
+        await sincronizarMensalidadesAlunos();
+      } catch {
+        // Tolerância caso ocorra erro assíncrono na sincronização
+      }
+    }
     return { ok: true, id };
   }
 
@@ -300,6 +346,9 @@ export async function buscarAluno(id: string): Promise<AlunoCompleto | null> {
     lesoes: data.lesoes ?? "",
     estilo_treino: data.estilo_treino ?? "",
     descricao_aluno: data.descricao_aluno ?? "",
+    valor_mensalidade: data.valor_mensalidade ? Number(data.valor_mensalidade) : null,
+    dia_vencimento: data.dia_vencimento ? Number(data.dia_vencimento) : null,
+    plano_padrao_id: data.plano_padrao_id ?? null,
     created_at: data.created_at ?? "",
     updated_at: data.updated_at ?? "",
   };
