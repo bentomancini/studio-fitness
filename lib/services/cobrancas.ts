@@ -578,11 +578,13 @@ export async function criarCobrancaAvulsa(dados: {
       tipo: "avulsa",
       observacao,
       qtd_contatos: 0,
+      mes_referencia: dataVencimento.slice(0, 7),
     })
     .select("id")
     .single();
 
   if (error) {
+    console.error("Erro ao criar cobrança avulsa no Supabase:", error);
     return { ok: false, error: `Erro ao criar cobrança avulsa: ${error.message}` };
   }
 

@@ -208,10 +208,43 @@ export function CobrancasClient({
     setProcessandoAvulsa(true);
 
     const formData = new FormData(e.currentTarget);
+    const alunoId = String(formData.get("aluno_id") ?? "").trim();
+    const titulo = String(formData.get("titulo") ?? "").trim();
+    const valorRaw = String(formData.get("valor") ?? "").trim().replace(",", ".");
+    const dataVencimento = String(formData.get("data_vencimento") ?? "").trim();
+    const observacao = String(formData.get("observacao") ?? "").trim();
+
+    const valor = parseFloat(valorRaw);
+
+    if (!alunoId) {
+      showToast("Por favor, selecione um aluno.", "error");
+      setProcessandoAvulsa(false);
+      return;
+    }
+
+    if (isNaN(valor) || valor <= 0) {
+      showToast("Informe um valor válido maior que zero.", "error");
+      setProcessandoAvulsa(false);
+      return;
+    }
+
+    if (!dataVencimento) {
+      showToast("Informe a data de vencimento.", "error");
+      setProcessandoAvulsa(false);
+      return;
+    }
+
     try {
-      const res = await acaoCriarCobrancaAvulsa(formData);
-      if (res.error) {
-        showToast(res.error, "error");
+      const res = await acaoCriarCobrancaAvulsa({
+        alunoId,
+        titulo: titulo || "Cobrança avulsa",
+        valor,
+        dataVencimento,
+        observacao,
+      });
+
+      if (!res.ok) {
+        showToast(res.error || "Erro ao salvar cobrança", "error");
       } else {
         showToast("Cobrança avulsa lançada com sucesso!", "success");
         setModalAvulsaAberto(false);

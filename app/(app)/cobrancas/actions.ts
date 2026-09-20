@@ -26,22 +26,14 @@ export async function acaoRegistrarContatoWhatsApp(cobrancaId: string) {
   return await registrarContatoWhatsApp(cobrancaId);
 }
 
-export async function acaoCriarCobrancaAvulsa(formData: FormData) {
-  const alunoId = String(formData.get("aluno_id") ?? "");
-  const titulo = String(formData.get("titulo") ?? "").trim();
-  const valorStr = String(formData.get("valor") ?? "").replace(",", ".");
-  const dataVencimento = String(formData.get("data_vencimento") ?? "");
-  const observacao = String(formData.get("observacao") ?? "").trim();
-
-  const valor = parseFloat(valorStr);
-
-  return await criarCobrancaAvulsa({
-    alunoId,
-    titulo: titulo || "Cobrança avulsa",
-    valor,
-    dataVencimento,
-    observacao,
-  });
+export async function acaoCriarCobrancaAvulsa(dados: {
+  alunoId: string;
+  titulo: string;
+  valor: number;
+  dataVencimento: string;
+  observacao?: string;
+}) {
+  return await criarCobrancaAvulsa(dados);
 }
 
 export async function acaoCancelarCobranca(cobrancaId: string) {
