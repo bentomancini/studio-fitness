@@ -64,7 +64,7 @@ export function preencherTemplateMensagem(params: ParametrosMensagemWhatsApp): s
   const valorFormatado = formatarValorBRL(params.valor);
   const vencimentoFormatado = formatarDataBR(params.dataVencimento);
   const chavePix = (params.chavePix || "").trim();
-  const studioNome = (params.studioNome || "Intense Fitness").trim();
+  const studioNome = (params.studioNome || "Studio Brenno Mancini").trim();
 
   let texto = params.template;
 

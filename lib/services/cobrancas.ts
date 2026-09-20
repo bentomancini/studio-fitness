@@ -65,13 +65,13 @@ export type ConfigCobranca = {
 
 const CONFIG_PADRAO: ConfigCobranca = {
   chave_pix: "",
-  studio_nome: "Intense Fitness",
+  studio_nome: "Studio Brenno Mancini",
   msg_antecipada:
-    "Olá, {primeiro_nome}! Passando para lembrar que sua mensalidade da Intense Fitness no valor de R$ {valor} vence no dia {vencimento}. Chave Pix: {chave_pix}. Qualquer dúvida, me avise!",
+    "Olá, {primeiro_nome}! Passando para lembrar que sua mensalidade do Studio Brenno Mancini no valor de R$ {valor} vence no dia {vencimento}. Chave Pix: {chave_pix}. Qualquer dúvida, me avise!",
   msg_hoje:
-    "Olá, {primeiro_nome}! Sua mensalidade da Intense Fitness no valor de R$ {valor} vence hoje ({vencimento}). Segue a chave Pix para pagamento: {chave_pix}. Obrigado!",
+    "Olá, {primeiro_nome}! Sua mensalidade do Studio Brenno Mancini no valor de R$ {valor} vence hoje ({vencimento}). Segue a chave Pix para pagamento: {chave_pix}. Obrigado!",
   msg_atraso:
-    "Olá, {primeiro_nome}, tudo bem? Não identificamos o pagamento da sua mensalidade da Intense Fitness no valor de R$ {valor}, vencida em {vencimento}. Segue nossa chave Pix: {chave_pix}. Caso já tenha pago, por favor desconsidere!",
+    "Olá, {primeiro_nome}, tudo bem? Não identificamos o pagamento da sua mensalidade do Studio Brenno Mancini no valor de R$ {valor}, vencida em {vencimento}. Segue nossa chave Pix: {chave_pix}. Caso já tenha pago, por favor desconsidere!",
 };
 
 /**
@@ -152,7 +152,7 @@ export async function salvarConfiguracoesCobranca(
 
   const linhas = [
     { chave: "cobranca_pix_chave", valor: (novasConfigs.chave_pix ?? "").trim() },
-    { chave: "cobranca_studio_nome", valor: (novasConfigs.studio_nome ?? "Intense Fitness").trim() },
+    { chave: "cobranca_studio_nome", valor: (novasConfigs.studio_nome ?? "Studio Brenno Mancini").trim() },
     { chave: "cobranca_msg_antecipada", valor: (novasConfigs.msg_antecipada ?? CONFIG_PADRAO.msg_antecipada).trim() },
     { chave: "cobranca_msg_hoje", valor: (novasConfigs.msg_hoje ?? CONFIG_PADRAO.msg_hoje).trim() },
     { chave: "cobranca_msg_atraso", valor: (novasConfigs.msg_atraso ?? CONFIG_PADRAO.msg_atraso).trim() },

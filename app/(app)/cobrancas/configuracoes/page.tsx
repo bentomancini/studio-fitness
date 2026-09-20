@@ -2,7 +2,7 @@ import { obterConfiguracoesCobranca } from "@/lib/services/cobrancas";
 import { ConfiguracoesCobrancaClient } from "./configuracoes-cobranca-client";
 
 export const metadata = {
-  title: "Configurações de Cobrança | Intense Fitness",
+  title: "Configurações de Cobrança | Studio Brenno Mancini",
   description: "Personalize sua chave Pix e modelos de mensagem do WhatsApp",
 };
 

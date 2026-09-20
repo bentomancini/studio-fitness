@@ -3,7 +3,7 @@ import { listarAlunosAtivos } from "@/lib/services/alunos";
 import { CobrancasClient } from "./cobrancas-client";
 
 export const metadata = {
-  title: "Cobranças | Intense Fitness",
+  title: "Cobranças | Studio Brenno Mancini",
   description: "Controle financeiro de mensalidades e cobrança ágil via WhatsApp",
 };
 

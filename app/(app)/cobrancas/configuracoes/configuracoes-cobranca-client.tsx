@@ -21,13 +21,13 @@ import {
 
 const TEMPLATES_PADRAO: ConfigCobranca = {
   chave_pix: "",
-  studio_nome: "Intense Fitness",
+  studio_nome: "Studio Brenno Mancini",
   msg_antecipada:
-    "Olá, {primeiro_nome}! Passando para lembrar que sua mensalidade da Intense Fitness no valor de R$ {valor} vence no dia {vencimento}. Chave Pix: {chave_pix}. Qualquer dúvida, me avise!",
+    "Olá, {primeiro_nome}! Passando para lembrar que sua mensalidade do Studio Brenno Mancini no valor de R$ {valor} vence no dia {vencimento}. Chave Pix: {chave_pix}. Qualquer dúvida, me avise!",
   msg_hoje:
-    "Olá, {primeiro_nome}! Sua mensalidade da Intense Fitness no valor de R$ {valor} vence hoje ({vencimento}). Segue a chave Pix para pagamento: {chave_pix}. Obrigado!",
+    "Olá, {primeiro_nome}! Sua mensalidade do Studio Brenno Mancini no valor de R$ {valor} vence hoje ({vencimento}). Segue a chave Pix para pagamento: {chave_pix}. Obrigado!",
   msg_atraso:
-    "Olá, {primeiro_nome}, tudo bem? Não identificamos o pagamento da sua mensalidade da Intense Fitness no valor de R$ {valor}, vencida em {vencimento}. Segue nossa chave Pix: {chave_pix}. Caso já tenha pago, por favor desconsidere!",
+    "Olá, {primeiro_nome}, tudo bem? Não identificamos o pagamento da sua mensalidade do Studio Brenno Mancini no valor de R$ {valor}, vencida em {vencimento}. Segue nossa chave Pix: {chave_pix}. Caso já tenha pago, por favor desconsidere!",
 };
 
 type Props = {
@@ -40,7 +40,7 @@ export function ConfiguracoesCobrancaClient({ configInicial }: Props) {
 
   // Estados dos campos
   const [chavePix, setChavePix] = useState(configInicial.chave_pix);
-  const [studioNome, setStudioNome] = useState(configInicial.studio_nome || "Intense Fitness");
+  const [studioNome, setStudioNome] = useState(configInicial.studio_nome || "Studio Brenno Mancini");
   const [msgAntecipada, setMsgAntecipada] = useState(configInicial.msg_antecipada);
   const [msgHoje, setMsgHoje] = useState(configInicial.msg_hoje);
   const [msgAtraso, setMsgAtraso] = useState(configInicial.msg_atraso);
@@ -84,7 +84,7 @@ export function ConfiguracoesCobrancaClient({ configInicial }: Props) {
     valor: 250,
     dataVencimento: hoje,
     chavePix: chavePix || "(sua chave Pix cadastrada acima)",
-    studioNome: studioNome || "Intense Fitness",
+    studioNome: studioNome || "Studio Brenno Mancini",
     template: templateAtual,
   });
 
@@ -167,7 +167,7 @@ export function ConfiguracoesCobrancaClient({ configInicial }: Props) {
               type="text"
               value={studioNome}
               onChange={(e) => setStudioNome(e.target.value)}
-              placeholder="Intense Fitness"
+              placeholder="Studio Brenno Mancini"
               className="h-11 rounded-xl border border-white/10 bg-zinc-950 px-3.5 text-xs text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none"
             />
           </div>
@@ -240,7 +240,7 @@ export function ConfiguracoesCobrancaClient({ configInicial }: Props) {
                 { tag: "{valor}", desc: "Ex: 250,00" },
                 { tag: "{vencimento}", desc: "Ex: 10/10/2026" },
                 { tag: "{chave_pix}", desc: "Chave Pix" },
-                { tag: "{studio_nome}", desc: "Intense Fitness" },
+                { tag: "{studio_nome}", desc: "Studio Brenno Mancini" },
               ].map((v) => (
                 <button
                   key={v.tag}

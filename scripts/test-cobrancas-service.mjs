@@ -81,7 +81,7 @@ function preencherTemplateMensagem(params) {
   const valorFormatado = formatarValorBRL(params.valor);
   const vencimentoFormatado = formatarDataBR(params.dataVencimento);
   const chavePix = (params.chavePix || "").trim();
-  const studioNome = (params.studioNome || "Intense Fitness").trim();
+  const studioNome = (params.studioNome || "Studio Brenno Mancini").trim();
 
   let texto = params.template;
   texto = texto.replace(/\{primeiro_nome\}/gi, primeiroNome);
@@ -182,7 +182,7 @@ async function executarTestes() {
     valor: 250,
     dataVencimento: "2026-10-15",
     chavePix: "11999999999",
-    studioNome: "Intense Fitness",
+    studioNome: "Studio Brenno Mancini",
     template,
   });
 
@@ -190,7 +190,7 @@ async function executarTestes() {
   const contemValor = msgPronta.includes("250,00");
   const contemVencimento = msgPronta.includes("15/10/2026");
   const contemPix = msgPronta.includes("11999999999");
-  const contemStudio = msgPronta.includes("Intense Fitness");
+  const contemStudio = msgPronta.includes("Studio Brenno Mancini");
 
   if (contemPrimeiroNome && contemValor && contemVencimento && contemPix && contemStudio) {
     console.log("• Substituição de variáveis ({primeiro_nome}, {valor}, {vencimento}, {chave_pix}): ✅ OK");
@@ -219,8 +219,8 @@ async function executarTestes() {
   } else {
     console.log(`• Configurações encontradas no Supabase: ${configs.length} chaves ✅ OK`);
     const studioNomeRow = configs.find((c) => c.chave === "cobranca_studio_nome");
-    if (studioNomeRow && studioNomeRow.valor === "Intense Fitness") {
-      console.log("• Nome do Studio configurado como 'Intense Fitness': ✅ OK");
+    if (studioNomeRow) {
+      console.log(`• Nome do Studio configurado no banco: '${studioNomeRow.valor}' ✅ OK`);
     }
   }
 

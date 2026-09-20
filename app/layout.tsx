@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Intense Fitness",
-    template: "%s · Intense Fitness",
+    default: "Studio Brenno Mancini",
+    template: "%s · Studio Brenno Mancini",
   },
-  description: "Agenda e gerenciamento do Intense Fitness",
-  applicationName: "Intense Fitness",
+  description: "Agenda e gerenciamento do Studio Brenno Mancini",
+  applicationName: "Studio Brenno Mancini",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Intense Fitness",
+    title: "Studio Brenno",
   },
   formatDetection: { telephone: true },
   icons: {

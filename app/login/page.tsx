@@ -28,7 +28,7 @@ export default function LoginPage() {
               <Dumbbell className="h-8 w-8 stroke-[2.5]" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              Intense Fitness
+              Studio Brenno Mancini
             </h1>
             <p className="mt-1 text-sm text-zinc-400">
               Gerenciamento exclusivo do estúdio
@@ -102,7 +102,7 @@ export default function LoginPage() {
 
         {/* Rodapé discreto */}
         <p className="mt-6 text-center text-xs text-zinc-600">
-          Acesso restrito ao proprietário · Intense Fitness
+          Acesso restrito ao proprietário · Studio Brenno Mancini
         </p>
       </div>
     </main>

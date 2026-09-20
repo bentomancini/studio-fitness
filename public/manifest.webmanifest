@@ -1,7 +1,7 @@
 {
-  "name": "Intense Fitness",
-  "short_name": "Intense",
-  "description": "Agenda e gerenciamento do Intense Fitness",
+  "name": "Studio Brenno Mancini",
+  "short_name": "Studio Brenno",
+  "description": "Agenda e gerenciamento do Studio Brenno Mancini",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

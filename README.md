@@ -1,6 +1,6 @@
-# Intense Fitness
+# Studio Brenno Mancini
 
-Aplicativo de agenda e gerenciamento do Intense Fitness, feito para ser
+Aplicativo de agenda e gerenciamento do Studio Brenno Mancini, feito para ser
 usado no iPhone (Safari mobile) pelo administrador do estúdio.
 
 **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + Supabase (banco e
