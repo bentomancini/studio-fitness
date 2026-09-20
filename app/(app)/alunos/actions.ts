@@ -24,7 +24,7 @@ export async function createAluno(
   if ("error" in resultado) return { error: resultado.error };
 
   revalidatePath("/alunos");
-  redirect("/alunos");
+  redirect(`/alunos/${resultado.id}`);
 }
 
 export async function updateAluno(
@@ -39,7 +39,8 @@ export async function updateAluno(
   if ("error" in resultado) return { error: resultado.error };
 
   revalidatePath("/alunos");
-  redirect("/alunos");
+  revalidatePath(`/alunos/${id}`);
+  redirect(`/alunos/${id}`);
 }
 
 export async function alternarStatus(id: string, statusAtual: StatusAluno) {
@@ -50,4 +51,5 @@ export async function alternarStatus(id: string, statusAtual: StatusAluno) {
 export async function removerAlunoAction(id: string) {
   await removerAluno(id);
   revalidatePath("/alunos");
+  redirect("/alunos");
 }

@@ -11,6 +11,7 @@ import {
   UserPlus,
   Phone,
   Edit3,
+  FileText,
   PowerOff,
   Power,
   Loader2,
@@ -21,6 +22,9 @@ type Aluno = {
   nome: string;
   telefone: string;
   status: "ativo" | "inativo";
+  data_nascimento?: string | null;
+  profissao?: string | null;
+  tem_dores_cronicas?: boolean | null;
 };
 
 function extrairIniciais(nome: string) {
@@ -148,10 +152,13 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
                 }`}
               >
                 <div className="flex items-start justify-between gap-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <Link
+                    href={`/alunos/${aluno.id}`}
+                    className="flex items-center gap-2.5 min-w-0 flex-1 group"
+                  >
                     {/* Avatar com Iniciais */}
                     <div
-                      className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-2xl text-xs font-bold ${
+                      className={`shrink-0 flex h-10 w-10 items-center justify-center rounded-2xl text-xs font-bold transition-transform group-hover:scale-105 ${
                         isAtivo
                           ? "bg-gradient-to-tr from-emerald-600 to-teal-500 text-zinc-950 shadow-md shadow-emerald-500/10"
                           : "bg-zinc-800 text-zinc-400 border border-white/5"
@@ -161,10 +168,17 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-white tracking-tight truncate">
-                        {aluno.nome}
-                      </h3>
-                      <div className="mt-0.5 flex items-center gap-2 text-xs text-zinc-400">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-semibold text-white tracking-tight truncate group-hover:text-emerald-300 transition-colors">
+                          {aluno.nome}
+                        </h3>
+                        {aluno.tem_dores_cronicas && (
+                          <span className="shrink-0 rounded-md bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-300">
+                            Dores
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
                         {aluno.telefone ? (
                           <span className="flex items-center gap-1 truncate">
                             <Phone className="h-3 w-3 text-zinc-500 shrink-0" />
@@ -173,9 +187,14 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
                         ) : (
                           <span className="text-zinc-600">Sem telefone</span>
                         )}
+                        {aluno.profissao && (
+                          <span className="text-zinc-500 truncate text-[11px]">
+                            · {aluno.profissao}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Badge de status */}
                   <span
@@ -221,8 +240,16 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
                       href={`/alunos/${aluno.id}`}
                       className="flex h-8 items-center gap-1 rounded-xl border border-white/10 bg-zinc-900/80 px-2.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
                     >
-                      <Edit3 className="h-3 w-3 text-zinc-400" />
-                      <span>Editar</span>
+                      <FileText className="h-3 w-3 text-zinc-400" />
+                      <span>Ficha</span>
+                    </Link>
+
+                    <Link
+                      href={`/alunos/${aluno.id}/editar`}
+                      className="flex h-8 items-center gap-1 rounded-xl border border-white/10 bg-zinc-900/80 px-2 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+                      title="Editar ficha"
+                    >
+                      <Edit3 className="h-3 w-3" />
                     </Link>
                   </div>
 

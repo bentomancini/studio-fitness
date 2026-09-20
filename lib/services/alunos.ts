@@ -1,6 +1,7 @@
 "use server";
 
 import { exigeDono } from "@/lib/exige-login";
+import { dataHoje } from "@/lib/constantes";
 
 const statusValidos = ["ativo", "inativo"] as const;
 export type StatusAluno = (typeof statusValidos)[number];
@@ -10,40 +11,158 @@ export type DadosAluno = {
   telefone: string;
   observacoes: string;
   status: StatusAluno;
+  data_nascimento: string | null;
+  profissao: string;
+  tem_empresa: boolean;
+  empresa_nome: string;
+  empresa_ramo: string;
+  tem_dores_cronicas: boolean;
+  dores_cronicas_descricao: string;
+  lesoes: string;
+  estilo_treino: string;
+  descricao_aluno: string;
 };
 
-// Lê o formulário e valida. Retorna dados limpos ou mensagem de erro.
+export type AlunoCompleto = DadosAluno & {
+  id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * Calcula a idade em anos a partir de uma data YYYY-MM-DD.
+ * Não armazena valor fixo no banco para manter o dado sempre atual.
+ */
+export async function calcularIdade(dataNascStr: string | null | undefined): Promise<number | null> {
+  if (!dataNascStr) return null;
+  const partes = dataNascStr.split("-").map(Number);
+  if (partes.length !== 3) return null;
+  const [ano, mes, dia] = partes;
+  if (!ano || !mes || !dia) return null;
+
+  const hojeStr = dataHoje();
+  const [hojeAno, hojeMes, hojeDia] = hojeStr.split("-").map(Number);
+
+  let idade = hojeAno - ano;
+  if (hojeMes < mes || (hojeMes === mes && hojeDia < dia)) {
+    idade--;
+  }
+  return idade >= 0 ? idade : null;
+}
+
+/**
+ * Lê o formulário, valida todas as regras no servidor e limpa dados condicionais.
+ */
 export async function lerAlunoDoForm(
   formData: FormData
 ): Promise<DadosAluno | { error: string }> {
   const nome = String(formData.get("nome") ?? "").trim();
   const telefone = String(formData.get("telefone") ?? "").trim();
-  const observacoes = String(formData.get("observacoes") ?? "").trim();
   const status = String(formData.get("status") ?? "ativo");
+  const dataNascimentoRaw = String(formData.get("data_nascimento") ?? "").trim();
+  const profissao = String(formData.get("profissao") ?? "").trim();
+  
+  // Booleanos: checa se está marcado como "true", "on" ou "1"
+  const temEmpresaRaw = formData.get("tem_empresa");
+  const tem_empresa = temEmpresaRaw === "true" || temEmpresaRaw === "on" || temEmpresaRaw === "1";
+  const empresa_nome = tem_empresa ? String(formData.get("empresa_nome") ?? "").trim() : "";
+  const empresa_ramo = tem_empresa ? String(formData.get("empresa_ramo") ?? "").trim() : "";
 
+  const temDoresRaw = formData.get("tem_dores_cronicas");
+  const tem_dores_cronicas = temDoresRaw === "true" || temDoresRaw === "on" || temDoresRaw === "1";
+  const dores_cronicas_descricao = tem_dores_cronicas
+    ? String(formData.get("dores_cronicas_descricao") ?? "").trim()
+    : "";
+
+  const lesoes = String(formData.get("lesoes") ?? "").trim();
+  const estilo_treino = String(formData.get("estilo_treino") ?? "").trim();
+  const descricao_aluno = String(formData.get("descricao_aluno") ?? "").trim();
+  const observacoes = String(formData.get("observacoes") ?? "").trim();
+
+  // Validações obrigatórias
   if (nome.length < 1 || nome.length > 120) {
     return { error: "Informe o nome do aluno (até 120 caracteres)." };
   }
   if (telefone.length > 30) {
     return { error: "O telefone é muito longo (máximo 30 caracteres)." };
   }
-  if (observacoes.length > 2000) {
-    return { error: "As observações são muito longas (máximo 2000 caracteres)." };
-  }
   if (!(statusValidos as readonly string[]).includes(status)) {
     return { error: "Status inválido." };
   }
 
-  return { nome, telefone, observacoes, status: status as StatusAluno };
+  // Validação de Data de Nascimento (opcional, mas se informada deve ser válida e não futura)
+  let data_nascimento: string | null = null;
+  if (dataNascimentoRaw) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascimentoRaw)) {
+      return { error: "Data de nascimento inválida. Use o formato padrão." };
+    }
+    const [ano, mes, dia] = dataNascimentoRaw.split("-").map(Number);
+    if (ano < 1900 || mes < 1 || mes > 12 || dia < 1 || dia > 31) {
+      return { error: "Data de nascimento inválida." };
+    }
+    const hoje = dataHoje();
+    if (dataNascimentoRaw > hoje) {
+      return { error: "A data de nascimento não pode ser futura." };
+    }
+    data_nascimento = dataNascimentoRaw;
+  }
+
+  // Limites de tamanho de texto (proteção contra payloads abusivos)
+  if (profissao.length > 120) {
+    return { error: "A profissão deve ter no máximo 120 caracteres." };
+  }
+  if (empresa_nome.length > 120) {
+    return { error: "O nome da empresa deve ter no máximo 120 caracteres." };
+  }
+  if (empresa_ramo.length > 120) {
+    return { error: "O ramo da empresa deve ter no máximo 120 caracteres." };
+  }
+  if (dores_cronicas_descricao.length > 1000) {
+    return { error: "A descrição das dores deve ter no máximo 1000 caracteres." };
+  }
+  if (lesoes.length > 1000) {
+    return { error: "O campo de lesões deve ter no máximo 1000 caracteres." };
+  }
+  if (estilo_treino.length > 1000) {
+    return { error: "O estilo de treino deve ter no máximo 1000 caracteres." };
+  }
+  if (descricao_aluno.length > 3000) {
+    return { error: "A descrição do aluno deve ter no máximo 3000 caracteres." };
+  }
+  if (observacoes.length > 2000) {
+    return { error: "As observações devem ter no máximo 2000 caracteres." };
+  }
+
+  return {
+    nome,
+    telefone,
+    observacoes,
+    status: status as StatusAluno,
+    data_nascimento,
+    profissao,
+    tem_empresa,
+    empresa_nome,
+    empresa_ramo,
+    tem_dores_cronicas,
+    dores_cronicas_descricao,
+    lesoes,
+    estilo_treino,
+    descricao_aluno,
+  };
 }
 
 export async function criarAluno(dados: DadosAluno) {
   const supabase = await exigeDono();
-  const { error } = await supabase.from("alunos").insert(dados);
+  const { data, error } = await supabase
+    .from("alunos")
+    .insert(dados)
+    .select("id")
+    .single();
+
   if (error) {
     return { error: "Não foi possível salvar o aluno. Tente novamente." };
   }
-  return { ok: true };
+  return { ok: true, id: data.id };
 }
 
 export async function atualizarAluno(id: string, dados: DadosAluno) {
@@ -52,7 +171,7 @@ export async function atualizarAluno(id: string, dados: DadosAluno) {
   if (error) {
     return { error: "Não foi possível salvar o aluno. Tente novamente." };
   }
-  return { ok: true };
+  return { ok: true, id };
 }
 
 export async function alternarStatusAluno(id: string, statusAtual: StatusAluno) {
@@ -70,7 +189,7 @@ export async function listarAlunos() {
   const supabase = await exigeDono();
   const { data } = await supabase
     .from("alunos")
-    .select("id, nome, telefone, status")
+    .select("id, nome, telefone, status, data_nascimento, profissao, tem_dores_cronicas")
     .order("nome");
   return data ?? [];
 }
@@ -85,12 +204,12 @@ export async function listarAlunosAtivos() {
   return data ?? [];
 }
 
-export async function buscarAluno(id: string) {
+export async function buscarAluno(id: string): Promise<AlunoCompleto | null> {
   const supabase = await exigeDono();
   const { data } = await supabase
     .from("alunos")
-    .select("id, nome, telefone, observacoes, status")
+    .select("*")
     .eq("id", id)
     .single();
-  return data ?? null;
+  return (data as AlunoCompleto) ?? null;
 }
