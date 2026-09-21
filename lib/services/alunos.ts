@@ -6,6 +6,8 @@ import { dataHoje } from "@/lib/constantes";
 const statusValidos = ["ativo", "inativo"] as const;
 export type StatusAluno = (typeof statusValidos)[number];
 
+export type PeriodicidadePlano = "mensal" | "trimestral";
+
 export type DadosAluno = {
   nome: string;
   telefone: string;
@@ -24,6 +26,7 @@ export type DadosAluno = {
   valor_mensalidade?: number | null;
   dia_vencimento?: number | null;
   plano_padrao_id?: string | null;
+  periodicidade?: PeriodicidadePlano;
 };
 
 export type AlunoCompleto = DadosAluno & {
@@ -31,6 +34,11 @@ export type AlunoCompleto = DadosAluno & {
   created_at: string;
   updated_at: string;
 };
+
+function ehUUIDValido(str: string | null | undefined): boolean {
+  if (!str) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
 
 function ehErroColunaInexistente(error: { code?: string; message?: string } | null | undefined): boolean {
   if (!error) return false;
@@ -167,8 +175,11 @@ export async function lerAlunoDoForm(
     dia_vencimento = d;
   }
 
+  const periodicidadeRaw = String(formData.get("periodicidade") ?? "mensal").toLowerCase().trim();
+  const periodicidade: PeriodicidadePlano = periodicidadeRaw === "trimestral" ? "trimestral" : "mensal";
+
   const planoPadraoRaw = String(formData.get("plano_padrao_id") ?? "").trim();
-  const plano_padrao_id = planoPadraoRaw || null;
+  const plano_padrao_id = ehUUIDValido(planoPadraoRaw) ? planoPadraoRaw : null;
 
   return {
     nome,
@@ -188,18 +199,38 @@ export async function lerAlunoDoForm(
     valor_mensalidade,
     dia_vencimento,
     plano_padrao_id,
+    periodicidade,
   };
 }
 
 export async function criarAluno(dados: DadosAluno) {
   const supabase = await exigeDono();
 
-  // Tenta salvar com todos os novos campos da Ficha Completa
-  const { data, error } = await supabase
+  // Limpa plano_padrao_id se não for uuid válido para evitar erro 22P02 no Postgres
+  const payload: Record<string, unknown> = {
+    ...dados,
+    plano_padrao_id: ehUUIDValido(dados.plano_padrao_id) ? dados.plano_padrao_id : null,
+  };
+
+  // Tenta salvar com todos os campos da Ficha Completa + periodicidade
+  let { data, error } = await supabase
     .from("alunos")
-    .insert(dados)
+    .insert(payload)
     .select("id")
     .single();
+
+  // Se a coluna periodicidade ainda não foi criada no Supabase, tenta novamente sem ela
+  if (error && (ehErroColunaInexistente(error) || error.message.includes("periodicidade"))) {
+    const semPeriodicidade = { ...payload };
+    delete semPeriodicidade.periodicidade;
+    const retryRes = await supabase
+      .from("alunos")
+      .insert(semPeriodicidade)
+      .select("id")
+      .single();
+    data = retryRes.data;
+    error = retryRes.error;
+  }
 
   if (!error && data) {
     if (dados.valor_mensalidade && dados.dia_vencimento && dados.status === "ativo") {
@@ -242,7 +273,22 @@ export async function criarAluno(dados: DadosAluno) {
 export async function atualizarAluno(id: string, dados: DadosAluno) {
   const supabase = await exigeDono();
 
-  const { error } = await supabase.from("alunos").update(dados).eq("id", id);
+  // Limpa plano_padrao_id se não for uuid válido para evitar erro 22P02 no Postgres
+  const payload: Record<string, unknown> = {
+    ...dados,
+    plano_padrao_id: ehUUIDValido(dados.plano_padrao_id) ? dados.plano_padrao_id : null,
+  };
+
+  let { error } = await supabase.from("alunos").update(payload).eq("id", id);
+
+  // Se a coluna periodicidade ainda não foi criada no Supabase, tenta novamente sem ela
+  if (error && (ehErroColunaInexistente(error) || error.message.includes("periodicidade"))) {
+    const semPeriodicidade = { ...payload };
+    delete semPeriodicidade.periodicidade;
+    const retryRes = await supabase.from("alunos").update(semPeriodicidade).eq("id", id);
+    error = retryRes.error;
+  }
+
   if (!error) {
     if (dados.valor_mensalidade && dados.dia_vencimento && dados.status === "ativo") {
       try {
@@ -309,14 +355,54 @@ export async function listarAlunos() {
   return data ?? [];
 }
 
-export async function listarAlunosAtivos() {
+export type AlunoResumoAtivo = {
+  id: string;
+  nome: string;
+  telefone?: string;
+  valor_mensalidade?: number | null;
+  dia_vencimento?: number | null;
+  plano_padrao_id?: string | null;
+  periodicidade?: PeriodicidadePlano;
+};
+
+export async function listarAlunosAtivos(): Promise<AlunoResumoAtivo[]> {
   const supabase = await exigeDono();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("alunos")
-    .select("id, nome")
+    .select("id, nome, telefone, valor_mensalidade, dia_vencimento, plano_padrao_id, periodicidade")
     .eq("status", "ativo")
     .order("nome");
-  return data ?? [];
+
+  const alunosData = error
+    ? (
+        await supabase
+          .from("alunos")
+          .select("id, nome, telefone, valor_mensalidade, dia_vencimento, plano_padrao_id")
+          .eq("status", "ativo")
+          .order("nome")
+      ).data
+    : data;
+
+  return (alunosData ?? []).map((a) => {
+    const raw = a as {
+      id: string;
+      nome: string;
+      telefone?: string | null;
+      valor_mensalidade?: number | string | null;
+      dia_vencimento?: number | string | null;
+      plano_padrao_id?: string | null;
+      periodicidade?: string | null;
+    };
+    return {
+      id: raw.id,
+      nome: raw.nome,
+      telefone: raw.telefone ?? "",
+      valor_mensalidade: raw.valor_mensalidade ? Number(raw.valor_mensalidade) : null,
+      dia_vencimento: raw.dia_vencimento ? Number(raw.dia_vencimento) : null,
+      plano_padrao_id: raw.plano_padrao_id ?? null,
+      periodicidade: (raw.periodicidade === "trimestral" ? "trimestral" : "mensal") as PeriodicidadePlano,
+    };
+  });
 }
 
 export async function buscarAluno(id: string): Promise<AlunoCompleto | null> {
@@ -349,6 +435,7 @@ export async function buscarAluno(id: string): Promise<AlunoCompleto | null> {
     valor_mensalidade: data.valor_mensalidade ? Number(data.valor_mensalidade) : null,
     dia_vencimento: data.dia_vencimento ? Number(data.dia_vencimento) : null,
     plano_padrao_id: data.plano_padrao_id ?? null,
+    periodicidade: (data.periodicidade === "trimestral" ? "trimestral" : "mensal") as PeriodicidadePlano,
     created_at: data.created_at ?? "",
     updated_at: data.updated_at ?? "",
   };

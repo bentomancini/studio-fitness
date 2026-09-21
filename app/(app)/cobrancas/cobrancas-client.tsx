@@ -45,7 +45,15 @@ import {
 type CobrancasClientProps = {
   painelInicial: PainelCobrancas;
   config: ConfigCobranca;
-  alunosAtivos: Array<{ id: string; nome: string; telefone?: string | null }>;
+  alunosAtivos: Array<{
+    id: string;
+    nome: string;
+    telefone?: string | null;
+    valor_mensalidade?: number | null;
+    dia_vencimento?: number | null;
+    plano_padrao_id?: string | null;
+    periodicidade?: "mensal" | "trimestral";
+  }>;
 };
 
 function calcularDiasDiferenca(dataVencimentoIso: string, hojeIso: string): number {
@@ -89,6 +97,33 @@ export function CobrancasClient({
 
   const [modalAvulsaAberto, setModalAvulsaAberto] = useState(false);
   const [processandoAvulsa, setProcessandoAvulsa] = useState(false);
+  const [alunoAvulsaId, setAlunoAvulsaId] = useState("");
+  const [tituloAvulsa, setTituloAvulsa] = useState("Cobrança avulsa");
+  const [valorAvulsa, setValorAvulsa] = useState("");
+  const [vencimentoAvulsa, setVencimentoAvulsa] = useState(hoje);
+
+  const alunoAvulsaSelecionado = alunosAtivos.find((a) => a.id === alunoAvulsaId);
+
+  const handleSelecionarAlunoAvulsa = (id: string) => {
+    setAlunoAvulsaId(id);
+    const aluno = alunosAtivos.find((a) => a.id === id);
+    if (aluno) {
+      if (aluno.valor_mensalidade) {
+        setValorAvulsa(aluno.valor_mensalidade.toFixed(2));
+      }
+      if (aluno.periodicidade === "trimestral") {
+        setTituloAvulsa("Trimestralidade");
+      } else if (aluno.valor_mensalidade) {
+        setTituloAvulsa("Mensalidade");
+      }
+      if (aluno.dia_vencimento) {
+        const [ano, mes] = hoje.split("-").map(Number);
+        const diasNoMes = new Date(Date.UTC(ano, mes, 0)).getUTCDate();
+        const dia = Math.min(aluno.dia_vencimento, diasNoMes);
+        setVencimentoAvulsa(`${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`);
+      }
+    }
+  };
 
   const [desfazendoId, setDesfazendoId] = useState<string | null>(null);
   const [cancelandoId, setCancelandoId] = useState<string | null>(null);
@@ -856,15 +891,23 @@ export function CobrancasClient({
                 <select
                   name="aluno_id"
                   required
+                  value={alunoAvulsaId}
+                  onChange={(e) => handleSelecionarAlunoAvulsa(e.target.value)}
                   className="h-10 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="">Selecione o aluno...</option>
                   {alunosAtivos.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.nome}
+                      {a.nome} {a.valor_mensalidade ? `(R$ ${a.valor_mensalidade.toFixed(2).replace(".", ",")})` : ""}
                     </option>
                   ))}
                 </select>
+
+                {alunoAvulsaSelecionado && alunoAvulsaSelecionado.valor_mensalidade && (
+                  <div className="mt-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2 text-[11px] text-emerald-300 animate-in fade-in duration-150">
+                    ✨ Dados puxados do plano: <strong>R$ {alunoAvulsaSelecionado.valor_mensalidade.toFixed(2).replace(".", ",")}</strong> ({alunoAvulsaSelecionado.periodicidade === "trimestral" ? "Trimestral" : "Mensal"} · dia {alunoAvulsaSelecionado.dia_vencimento})
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
@@ -875,8 +918,9 @@ export function CobrancasClient({
                   type="text"
                   name="titulo"
                   required
-                  placeholder="Ex.: Matrícula, Avaliação Física, Aulas Extras"
-                  defaultValue="Cobrança avulsa"
+                  value={tituloAvulsa}
+                  onChange={(e) => setTituloAvulsa(e.target.value)}
+                  placeholder="Ex.: Mensalidade, Trimestralidade, Matrícula"
                   className="h-10 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                 />
               </div>
@@ -892,6 +936,8 @@ export function CobrancasClient({
                     min="1"
                     name="valor"
                     required
+                    value={valorAvulsa}
+                    onChange={(e) => setValorAvulsa(e.target.value)}
                     placeholder="0,00"
                     className="h-10 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                   />
@@ -905,7 +951,8 @@ export function CobrancasClient({
                     type="date"
                     name="data_vencimento"
                     required
-                    defaultValue={hoje}
+                    value={vencimentoAvulsa}
+                    onChange={(e) => setVencimentoAvulsa(e.target.value)}
                     className="h-10 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                   />
                 </div>

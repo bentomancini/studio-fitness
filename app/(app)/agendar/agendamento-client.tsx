@@ -18,6 +18,7 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   XCircle,
   Plus,
   Loader2,
@@ -32,7 +33,16 @@ type Aula = {
   limite_vagas: number;
 };
 
-type Aluno = { id: string; nome: string; telefone: string };
+type Aluno = {
+  id: string;
+  nome: string;
+  telefone: string;
+  plano_padrao_id?: string | null;
+  frequencia_semanal?: number | null;
+  plano_nome?: string | null;
+  periodicidade?: string | null;
+  validade_plano?: string | null;
+};
 
 type Agendamento = { aula_id: string; aluno_id: string; data: string };
 
@@ -44,6 +54,30 @@ function adicionarDias(data: string, dias: number) {
   const m = String(dt.getMonth() + 1).padStart(2, "0");
   const d = String(dt.getDate()).padStart(2, "0");
   return `${dt.getFullYear()}-${m}-${d}`;
+}
+
+function obterLimitesDaSemana(dataStr: string) {
+  const [ano, mes, dia] = dataStr.split("-").map(Number);
+  const dt = new Date(ano, mes - 1, dia);
+  const diaSemana = dt.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  const diffSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
+  const seg = new Date(ano, mes - 1, dia + diffSegunda);
+  const sab = new Date(seg.getFullYear(), seg.getMonth(), seg.getDate() + 5);
+  const dom = new Date(seg.getFullYear(), seg.getMonth(), seg.getDate() + 6);
+
+  const toIso = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  return {
+    inicioSemana: toIso(seg),
+    fimSemana: toIso(dom),
+    inicioFormatado: `${String(seg.getDate()).padStart(2, "0")}/${String(seg.getMonth() + 1).padStart(2, "0")}`,
+    fimFormatado: `${String(sab.getDate()).padStart(2, "0")}/${String(sab.getMonth() + 1).padStart(2, "0")}`,
+  };
 }
 
 function formatarDataMobile(data: string, hoje: string) {
@@ -80,6 +114,22 @@ export function Agendamento({
   const [alunoId, setAlunoId] = useState(alunos[0]?.id ?? "");
   const [data, setData] = useState(dataHoje());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const alunoSelecionado = alunos.find((a) => a.id === alunoId);
+  const { inicioSemana, fimSemana, inicioFormatado, fimFormatado } = obterLimitesDaSemana(data);
+
+  // Agendamentos deste aluno na semana selecionada
+  const agendamentosSemanaAluno = agendamentos.filter(
+    (g) => g.aluno_id === alunoId && g.data >= inicioSemana && g.data <= fimSemana
+  );
+  const qtdNaSemana = agendamentosSemanaAluno.length;
+  const limiteSemanal = alunoSelecionado?.frequencia_semanal ?? null;
+  const atingiuLimite = limiteSemanal !== null && qtdNaSemana >= limiteSemanal;
+
+  // Checagem de validade do plano/pacote
+  const validadeExpirada =
+    Boolean(alunoSelecionado?.validade_plano) &&
+    data > (alunoSelecionado?.validade_plano ?? "");
 
   const weekday = diaDaSemana(data);
   const doDia = aulas
@@ -149,6 +199,58 @@ export function Agendamento({
             ))}
           </select>
         </label>
+
+        {/* Info do Plano do Aluno Selecionado */}
+        {alunoSelecionado && (
+          <div className="flex flex-col gap-2 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400">Plano do Aluno:</span>
+              <span className="font-bold text-white">
+                {alunoSelecionado.plano_nome ?? "Sem plano fixo (Avulso)"}
+              </span>
+            </div>
+            {limiteSemanal !== null && (
+              <div className="flex items-center justify-between border-t border-white/5 pt-2">
+                <span className="text-zinc-400">Aulas nesta semana ({inicioFormatado} a {fimFormatado}):</span>
+                <span
+                  className={`font-bold rounded-md px-2 py-0.5 text-[11px] ${
+                    atingiuLimite
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  }`}
+                >
+                  {qtdNaSemana} de {limiteSemanal} {limiteSemanal === 1 ? "aula" : "aulas"}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Alerta de Limite Semanal Atingido */}
+        {atingiuLimite && (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-950/25 p-3.5 text-xs text-amber-200 animate-in fade-in duration-150">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-white">Limite semanal atingido ({qtdNaSemana}/{limiteSemanal} aulas)</span>
+              <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                {alunoSelecionado?.nome} já possui {qtdNaSemana} aula(s) agendada(s) nesta semana ({inicioFormatado} a {fimFormatado}). O agendamento é permitido para reposição ou aula extra combinada.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Alerta de Validade Expirada */}
+        {validadeExpirada && (
+          <div className="flex items-start gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-950/25 p-3.5 text-xs text-rose-200 animate-in fade-in duration-150">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400 mt-0.5" />
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-white">Plano/Pacote Expirado</span>
+              <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                A data selecionada ({formatarData(data)}) é posterior à validade do plano do aluno ({formatarData(alunoSelecionado?.validade_plano ?? "")}). Verifique o acerto de renovação.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Seleção de Data — Card Unificado, acessível e sem sobreposição */}
         <div className="flex flex-col gap-1.5">

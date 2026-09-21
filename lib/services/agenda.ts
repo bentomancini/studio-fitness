@@ -4,9 +4,20 @@ import { exigeDono } from "@/lib/exige-login";
 
 export type EstadoSuspensao = { error?: string };
 
+export type AlunoAgenda = {
+  id: string;
+  nome: string;
+  telefone: string;
+  plano_padrao_id?: string | null;
+  frequencia_semanal?: number | null;
+  plano_nome?: string | null;
+  periodicidade?: string | null;
+  validade_plano?: string | null;
+};
+
 export type DadosAgenda = {
   aulas: { id: string; tipo_aula: string; dia_semana: number; horario: string; limite_vagas: number }[];
-  alunos: { id: string; nome: string; telefone: string }[];
+  alunos: AlunoAgenda[];
   agendamentos: { aula_id: string; aluno_id: string; data: string }[];
   suspensoes: { aula_id: string; data: string }[];
 };
@@ -18,6 +29,7 @@ function textoData(valor: unknown) {
 }
 
 import { dataHoje } from "@/lib/constantes";
+import { listarPlanosAtivos } from "./planos";
 
 function subtrairDias(data: string, dias: number) {
   const [ano, mes, dia] = data.split("-").map(Number);
@@ -32,22 +44,59 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
   const supabase = await exigeDono();
   const limitePassado = subtrairDias(dataHoje(), 45);
 
-  const [{ data: aulas }, { data: alunos }, { data: agendamentos }, { data: suspensoes }] =
-    await Promise.all([
-      supabase
-        .from("aulas")
-        .select("id, tipo_aula, dia_semana, horario, limite_vagas")
-        .eq("ativo", true),
-      supabase.from("alunos").select("id, nome, telefone").eq("status", "ativo").order("nome"),
-      supabase
-        .from("agendamentos")
-        .select("aula_id, aluno_id, data")
-        .gte("data", limitePassado),
-      supabase
-        .from("aulas_suspensas")
-        .select("aula_id, data")
-        .gte("data", limitePassado),
-    ]);
+  const [
+    { data: aulas },
+    alunosRes,
+    { data: agendamentos },
+    { data: suspensoes },
+    planos,
+    { data: compras },
+  ] = await Promise.all([
+    supabase
+      .from("aulas")
+      .select("id, tipo_aula, dia_semana, horario, limite_vagas")
+      .eq("ativo", true),
+    supabase
+      .from("alunos")
+      .select("id, nome, telefone, plano_padrao_id, periodicidade")
+      .eq("status", "ativo")
+      .order("nome")
+      .then(async (res) => {
+        if (res.error) {
+          // Fallback caso a coluna periodicidade ainda não exista
+          return await supabase
+            .from("alunos")
+            .select("id, nome, telefone, plano_padrao_id")
+            .eq("status", "ativo")
+            .order("nome");
+        }
+        return res;
+      }),
+    supabase
+      .from("agendamentos")
+      .select("aula_id, aluno_id, data")
+      .gte("data", limitePassado),
+    supabase
+      .from("aulas_suspensas")
+      .select("aula_id, data")
+      .gte("data", limitePassado),
+    listarPlanosAtivos(),
+    supabase
+      .from("compras")
+      .select("aluno_id, validade, qtd_aulas_restantes")
+      .gt("qtd_aulas_restantes", 0)
+      .order("validade", { ascending: true, nullsFirst: false }),
+  ]);
+
+  const planosMap = new Map(planos.map((p) => [p.id, p]));
+  const comprasMap = new Map<string, string>();
+  for (const c of compras ?? []) {
+    if (c.validade && !comprasMap.has(c.aluno_id)) {
+      comprasMap.set(c.aluno_id, textoData(c.validade));
+    }
+  }
+
+  const rawAlunos = alunosRes?.data ?? [];
 
   return {
     aulas: (aulas ?? []).map((a) => ({
@@ -57,7 +106,19 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
       horario: a.horario,
       limite_vagas: a.limite_vagas,
     })),
-    alunos: (alunos ?? []).map((a) => ({ id: a.id, nome: a.nome, telefone: a.telefone })),
+    alunos: rawAlunos.map((a) => {
+      const p = a.plano_padrao_id ? planosMap.get(a.plano_padrao_id) : null;
+      return {
+        id: a.id,
+        nome: a.nome,
+        telefone: a.telefone,
+        plano_padrao_id: a.plano_padrao_id ?? null,
+        frequencia_semanal: p?.frequencia_semanal ?? null,
+        plano_nome: p?.nome ?? null,
+        periodicidade: (a as { periodicidade?: string })?.periodicidade ?? "mensal",
+        validade_plano: comprasMap.get(a.id) ?? null,
+      };
+    }),
     agendamentos: (agendamentos ?? []).map((g) => ({
       aula_id: g.aula_id,
       aluno_id: g.aluno_id,

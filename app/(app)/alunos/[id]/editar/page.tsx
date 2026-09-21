@@ -1,4 +1,5 @@
 import { buscarAluno } from "@/lib/services/alunos";
+import { listarPlanosAtivos } from "@/lib/services/planos";
 import { notFound } from "next/navigation";
 import { AlunoForm } from "../../aluno-form";
 import Link from "next/link";
@@ -12,7 +13,10 @@ export default async function EditarAlunoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const aluno = await buscarAluno(id);
+  const [aluno, planos] = await Promise.all([
+    buscarAluno(id),
+    listarPlanosAtivos(),
+  ]);
 
   if (!aluno) notFound();
 
@@ -36,7 +40,7 @@ export default async function EditarAlunoPage({
         </div>
       </div>
 
-      <AlunoForm aluno={aluno} />
+      <AlunoForm aluno={aluno} planos={planos} />
     </div>
   );
 }

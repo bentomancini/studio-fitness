@@ -19,8 +19,11 @@ import {
   Check,
   AlertCircle,
   CircleDollarSign,
+  Tag,
+  Percent,
 } from "lucide-react";
-import type { AlunoCompleto } from "@/lib/services/alunos";
+import type { AlunoCompleto, PeriodicidadePlano } from "@/lib/services/alunos";
+import { type Plano, calcularPlanoTrimestral } from "@/lib/planos-calculo";
 
 function calcularIdadeCliente(dataStr: string): number | null {
   if (!dataStr) return null;
@@ -39,13 +42,57 @@ function calcularIdadeCliente(dataStr: string): number | null {
   return idade >= 0 ? idade : null;
 }
 
-export function AlunoForm({ aluno }: { aluno?: AlunoCompleto | null }) {
+export function AlunoForm({
+  aluno,
+  planos = [],
+}: {
+  aluno?: AlunoCompleto | null;
+  planos?: Plano[];
+}) {
   const acao = aluno ? updateAluno.bind(null, aluno.id) : createAluno;
   const [state, formAction, pending] = useActionState(acao, {});
 
   const [dataNasc, setDataNasc] = useState(aluno?.data_nascimento ?? "");
   const [temEmpresa, setTemEmpresa] = useState<boolean>(Boolean(aluno?.tem_empresa));
   const [temDores, setTemDores] = useState<boolean>(Boolean(aluno?.tem_dores_cronicas));
+
+  // Estado do Plano e Acordo Financeiro
+  const [planoId, setPlanoId] = useState(aluno?.plano_padrao_id ?? "");
+  const [periodicidade, setPeriodicidade] = useState<PeriodicidadePlano>(
+    aluno?.periodicidade ?? "mensal"
+  );
+  const [valorMensalidade, setValorMensalidade] = useState<string>(
+    aluno?.valor_mensalidade ? String(aluno.valor_mensalidade) : ""
+  );
+
+  const planoSelecionado = planos.find((p) => p.id === planoId);
+
+  // Manipulador de troca de plano
+  const handleSelecionarPlano = (novoId: string) => {
+    setPlanoId(novoId);
+    const p = planos.find((item) => item.id === novoId);
+    if (p && p.preco_mensal) {
+      if (periodicidade === "trimestral") {
+        const calc = calcularPlanoTrimestral(p.preco_mensal);
+        setValorMensalidade(calc.totalTrimestral.toFixed(2));
+      } else {
+        setValorMensalidade(p.preco_mensal.toFixed(2));
+      }
+    }
+  };
+
+  // Manipulador de troca de periodicidade (Mensal x Trimestral)
+  const handleTrocarPeriodicidade = (novaPeriodicidade: PeriodicidadePlano) => {
+    setPeriodicidade(novaPeriodicidade);
+    if (planoSelecionado && planoSelecionado.preco_mensal) {
+      if (novaPeriodicidade === "trimestral") {
+        const calc = calcularPlanoTrimestral(planoSelecionado.preco_mensal);
+        setValorMensalidade(calc.totalTrimestral.toFixed(2));
+      } else {
+        setValorMensalidade(planoSelecionado.preco_mensal.toFixed(2));
+      }
+    }
+  };
 
   const idadeCalculada = calcularIdadeCliente(dataNasc);
 
@@ -392,7 +439,7 @@ export function AlunoForm({ aluno }: { aluno?: AlunoCompleto | null }) {
       </section>
 
       {/* ========================================================= */}
-      {/* BLOCO 4: ACORDO DE MENSALIDADE (COBRANÇAS) */}
+      {/* BLOCO 4: ACORDO DE PLANO & MENSALIDADE (COBRANÇAS) */}
       {/* ========================================================= */}
       <section className="glass-panel rounded-3xl p-5 border border-white/10 flex flex-col gap-4 shadow-lg shadow-black/20">
         <div className="flex items-center gap-2.5 border-b border-white/5 pb-3">
@@ -400,26 +447,119 @@ export function AlunoForm({ aluno }: { aluno?: AlunoCompleto | null }) {
             <CircleDollarSign className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-white">4. Acordo de Mensalidade (Cobrança)</h2>
+            <h2 className="text-sm font-bold text-white">4. Plano & Acordo Financeiro</h2>
             <p className="text-[11px] text-zinc-400">
-              Valor e dia de vencimento para controle e mensagens do WhatsApp
+              Vincule o aluno a um plano, escolha mensal ou trimestral e defina o vencimento
             </p>
           </div>
         </div>
 
+        {/* 1. Seleção de Plano */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center justify-between text-xs font-semibold text-zinc-300">
+            <span className="flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5 text-emerald-400" />
+              Plano de Atendimento
+            </span>
+            {planoSelecionado && (
+              <span className="text-[11px] font-normal text-emerald-400">
+                {planoSelecionado.frequencia_semanal}x por semana
+              </span>
+            )}
+          </label>
+          <select
+            value={planoId}
+            onChange={(e) => handleSelecionarPlano(e.target.value)}
+            className="h-12 min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/90 px-3.5 text-xs text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors [color-scheme:dark]"
+          >
+            <option value="">Sem plano padrão (valor avulso ou personalizado)</option>
+            {planos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome} — R$ {p.preco_mensal ? p.preco_mensal.toFixed(2).replace(".", ",") : "0,00"}/mês ({p.frequencia_semanal}x/sem)
+              </option>
+            ))}
+          </select>
+          <input type="hidden" name="plano_padrao_id" value={planoId} />
+        </div>
+
+        {/* 2. Seletor de Periodicidade (Pill Toggle) */}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
+            <Percent className="h-3.5 w-3.5 text-emerald-400" />
+            Periodicidade de Cobrança
+          </label>
+          <div className="grid grid-cols-2 gap-2 p-1 rounded-2xl bg-zinc-900/80 border border-white/10">
+            <button
+              type="button"
+              onClick={() => handleTrocarPeriodicidade("mensal")}
+              className={`h-10 min-h-[40px] rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                periodicidade === "mensal"
+                  ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Mensal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTrocarPeriodicidade("trimestral")}
+              className={`h-10 min-h-[40px] rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                periodicidade === "trimestral"
+                  ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <span>Trimestral</span>
+              <span
+                className={`rounded-full px-1.5 py-0.2 text-[9px] font-bold ${
+                  periodicidade === "trimestral"
+                    ? "bg-zinc-950/30 text-zinc-950"
+                    : "bg-emerald-500/20 text-emerald-400"
+                }`}
+              >
+                5% OFF
+              </span>
+            </button>
+          </div>
+          <input type="hidden" name="periodicidade" value={periodicidade} />
+        </div>
+
+        {/* Card Explicativo de Economia no Trimestral */}
+        {periodicidade === "trimestral" && planoSelecionado && planoSelecionado.preco_mensal && (() => {
+          const calc = calcularPlanoTrimestral(planoSelecionado.preco_mensal);
+          return (
+            <div className="flex flex-col gap-1.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 text-xs text-emerald-300 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between font-bold text-white">
+                <span>Plano Trimestral com 5% de Desconto</span>
+                <span className="text-emerald-400 font-extrabold">
+                  R$ {calc.totalTrimestral.toFixed(2).replace(".", ",")}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
+                De <span className="line-through text-zinc-500">R$ {calc.totalSemDesconto.toFixed(2).replace(".", ",")}</span> por <strong className="text-emerald-300">R$ {calc.totalTrimestral.toFixed(2).replace(".", ",")}</strong> (economia de <strong>R$ {calc.economia.toFixed(2).replace(".", ",")}</strong>).
+              </p>
+              <span className="text-[10px] text-zinc-400">
+                Cobrado a cada 3 meses · equivale a aprox. R$ {calc.equivalentePorMes.toFixed(2).replace(".", ",")}/mês.
+              </span>
+            </div>
+          );
+        })()}
+
+        {/* 3. Valores e Dia de Vencimento */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Valor da Mensalidade */}
+          {/* Valor da Cobrança */}
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-zinc-300">
-              Mensalidade (R$)
+              {periodicidade === "trimestral" ? "Valor Trimestral (R$)" : "Valor Mensal (R$)"}
             </span>
             <input
               type="number"
               step="0.01"
               min="1"
               name="valor_mensalidade"
-              defaultValue={aluno?.valor_mensalidade ?? ""}
-              placeholder="Ex: 250,00"
+              value={valorMensalidade}
+              onChange={(e) => setValorMensalidade(e.target.value)}
+              placeholder="Ex: 349,90"
               className="h-12 min-h-[44px] rounded-xl border border-white/10 bg-zinc-900/90 px-4 text-sm text-white placeholder:text-zinc-600 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors"
             />
           </label>
@@ -442,7 +582,7 @@ export function AlunoForm({ aluno }: { aluno?: AlunoCompleto | null }) {
         </div>
 
         <p className="text-[11px] text-zinc-400 leading-relaxed">
-          💡 Ao definir a mensalidade e o dia de vencimento, o sistema gera e agenda as cobranças do aluno na tela de Cobranças automaticamente a cada mês.
+          💡 O valor é preenchido automaticamente ao escolher o plano, mas você pode ajustá-lo livremente para acordos especiais. A frequência semanal e a validade serão respeitadas na agenda.
         </p>
       </section>
 

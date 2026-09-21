@@ -1,10 +1,14 @@
 import { AlunoForm } from "../aluno-form";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { listarPlanosAtivos } from "@/lib/services/planos";
 
 export const metadata = { title: "Novo Aluno" };
+export const dynamic = "force-dynamic";
 
-export default function NovoAlunoPage() {
+export default async function NovoAlunoPage() {
+  const planos = await listarPlanosAtivos();
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
@@ -25,7 +29,7 @@ export default function NovoAlunoPage() {
         </div>
       </div>
 
-      <AlunoForm />
+      <AlunoForm planos={planos} />
     </div>
   );
 }

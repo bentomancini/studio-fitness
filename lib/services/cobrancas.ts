@@ -81,18 +81,20 @@ const CONFIG_PADRAO: ConfigCobranca = {
  */
 export async function calcularProximoVencimento(
   dataVencimentoIso: string,
-  diaPadrao?: number | null
+  diaPadrao?: number | null,
+  periodicidade: "mensal" | "trimestral" = "mensal"
 ): Promise<string> {
   const partes = dataVencimentoIso.split("-").map(Number);
   const ano = partes[0];
   const mes = partes[1]; // 1 a 12
   const diaOriginal = partes[2];
 
+  const incremento = periodicidade === "trimestral" ? 3 : 1;
   let proxAno = ano;
-  let proxMes = mes + 1;
-  if (proxMes > 12) {
-    proxMes = 1;
-    proxAno = ano + 1;
+  let proxMes = mes + incremento;
+  while (proxMes > 12) {
+    proxMes -= 12;
+    proxAno += 1;
   }
 
   // Descobre quantos dias existem no próximo mês (passando 0 no dia do mês seguinte)
@@ -181,32 +183,70 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
   const mesAtualRef = `${hojeAno}-${String(hojeMes).padStart(2, "0")}`;
 
   // Busca alunos ativos que possuem acordo financeiro configurado
-  const { data: alunos } = await supabase
+  let { data: alunos } = await supabase
     .from("alunos")
-    .select("id, valor_mensalidade, dia_vencimento, plano_padrao_id")
+    .select("id, valor_mensalidade, dia_vencimento, plano_padrao_id, periodicidade")
     .eq("status", "ativo")
     .not("valor_mensalidade", "is", null)
     .not("dia_vencimento", "is", null);
 
+  // Fallback caso a coluna periodicidade ainda não exista no Supabase
+  if (!alunos) {
+    const res = await supabase
+      .from("alunos")
+      .select("id, valor_mensalidade, dia_vencimento, plano_padrao_id")
+      .eq("status", "ativo")
+      .not("valor_mensalidade", "is", null)
+      .not("dia_vencimento", "is", null);
+    alunos = (res.data ?? []).map((a) => ({ ...a, periodicidade: "mensal" }));
+  }
+
   if (!alunos || alunos.length === 0) return;
 
-  // Busca cobranças já existentes no mês atual para esses alunos
+  // Busca cobranças recentes desses alunos
   const alunoIds = alunos.map((a) => a.id);
   const { data: cobrancasExistentes } = await supabase
     .from("cobrancas")
-    .select("aluno_id, mes_referencia, status")
+    .select("aluno_id, mes_referencia, data_vencimento, status, tipo")
     .in("aluno_id", alunoIds)
     .eq("tipo", "recorrente")
-    .eq("mes_referencia", mesAtualRef)
     .neq("status", "cancelado");
 
-  const alunosComCobranca = new Set((cobrancasExistentes ?? []).map((c) => c.aluno_id));
+  // Mapeia cobranças por aluno
+  const cobrancasPorAluno = new Map<string, typeof cobrancasExistentes>();
+  for (const c of cobrancasExistentes ?? []) {
+    const list = cobrancasPorAluno.get(c.aluno_id) ?? [];
+    list.push(c);
+    cobrancasPorAluno.set(c.aluno_id, list);
+  }
 
-  // Para quem não tem cobrança no mês atual, gera a cobrança com o dia combinado
   const novasCobrancas = [];
   for (const aluno of alunos) {
-    if (alunosComCobranca.has(aluno.id)) continue;
     if (!aluno.valor_mensalidade || !aluno.dia_vencimento) continue;
+    const listaDoAluno = cobrancasPorAluno.get(aluno.id) ?? [];
+    const isTrimestral = aluno.periodicidade === "trimestral";
+
+    if (isTrimestral) {
+      // Para plano trimestral: verifica se há cobrança pendente ou se a última cobrança cobre o período
+      const temPendente = listaDoAluno.some((c) => c.status === "pendente");
+      if (temPendente) continue;
+
+      // Se há cobrança paga com vencimento ainda no futuro ou nos últimos 2 meses, não precisa gerar
+      const temRecente = listaDoAluno.some((c) => {
+        if (!c.data_vencimento) return false;
+        // Se a data de vencimento é maior que hoje, ainda está no ciclo
+        if (c.data_vencimento >= hoje) return true;
+        // Verifica se a última cobrança foi há menos de 3 meses
+        const [anoVenc, mesVenc] = c.data_vencimento.split("-").map(Number);
+        const diffMeses = (hojeAno - anoVenc) * 12 + (hojeMes - mesVenc);
+        return diffMeses < 3;
+      });
+      if (temRecente) continue;
+    } else {
+      // Para plano mensal tradicional: basta checar se tem cobrança no mês atual
+      const temNoMes = listaDoAluno.some((c) => c.mes_referencia === mesAtualRef);
+      if (temNoMes) continue;
+    }
 
     const diasNoMes = new Date(Date.UTC(hojeAno, hojeMes, 0)).getUTCDate();
     const diaEfetivo = Math.min(aluno.dia_vencimento, diasNoMes);
@@ -215,14 +255,14 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
     novasCobrancas.push({
       aluno_id: aluno.id,
       plano_id: aluno.plano_padrao_id,
-      titulo: "Mensalidade",
+      titulo: isTrimestral ? "Trimestralidade" : "Mensalidade",
       valor: Number(aluno.valor_mensalidade),
       data_vencimento: dataVencimento,
       status: "pendente" as const,
       tipo: "recorrente" as const,
       mes_referencia: mesAtualRef,
       qtd_contatos: 0,
-      observacao: "",
+      observacao: isTrimestral ? "Plano Trimestral com 5% de desconto" : "",
     });
   }
 
@@ -411,7 +451,15 @@ export async function marcarComoPago(
   if (cobranca.tipo === "recorrente") {
     const aluno = Array.isArray(cobranca.aluno) ? cobranca.aluno[0] : cobranca.aluno;
     const diaPadrao = aluno?.dia_vencimento ?? null;
-    const proximoVencimento = await calcularProximoVencimento(cobranca.data_vencimento, diaPadrao);
+    const isTrimestral =
+      (aluno as { periodicidade?: string })?.periodicidade === "trimestral" ||
+      cobranca.titulo?.toLowerCase().includes("trimestral");
+    const periodicidade = isTrimestral ? "trimestral" : "mensal";
+    const proximoVencimento = await calcularProximoVencimento(
+      cobranca.data_vencimento,
+      diaPadrao,
+      periodicidade
+    );
     const proximoMesRef = proximoVencimento.slice(0, 7);
 
     // Verifica se já existe cobrança ativa para o próximo ciclo
@@ -432,14 +480,14 @@ export async function marcarComoPago(
         .insert({
           aluno_id: cobranca.aluno_id,
           plano_id: cobranca.plano_id,
-          titulo: cobranca.titulo || "Mensalidade",
+          titulo: isTrimestral ? "Trimestralidade" : (cobranca.titulo || "Mensalidade"),
           valor: valorProximo,
           data_vencimento: proximoVencimento,
           status: "pendente",
           tipo: "recorrente",
           mes_referencia: proximoMesRef,
           qtd_contatos: 0,
-          observacao: "",
+          observacao: isTrimestral ? "Plano Trimestral renovado" : "",
         })
         .select("id")
         .single();

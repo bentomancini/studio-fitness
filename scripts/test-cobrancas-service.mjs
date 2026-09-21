@@ -28,17 +28,18 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Funções puras replicadas para testar a lógica do serviço
 // =============================================================
 
-function calcularProximoVencimento(dataVencimentoIso, diaPadrao) {
+function calcularProximoVencimento(dataVencimentoIso, diaPadrao, periodicidade = "mensal") {
   const partes = dataVencimentoIso.split("-").map(Number);
   const ano = partes[0];
   const mes = partes[1];
   const diaOriginal = partes[2];
 
+  const incremento = periodicidade === "trimestral" ? 3 : 1;
   let proxAno = ano;
-  let proxMes = mes + 1;
-  if (proxMes > 12) {
-    proxMes = 1;
-    proxAno = ano + 1;
+  let proxMes = mes + incremento;
+  while (proxMes > 12) {
+    proxMes -= 12;
+    proxAno += 1;
   }
 
   const diasNoProxMes = new Date(Date.UTC(proxAno, proxMes, 0)).getUTCDate();
@@ -145,6 +146,22 @@ async function executarTestes() {
     console.log("• 31/Mar -> Mês de 30 dias (30/Abr): ✅ OK");
   } else {
     console.error(`• Mês de 30 dias incorreto: esperado 2026-04-30, recebido ${caso5}`);
+    erros++;
+  }
+
+  const casoTrimestral1 = calcularProximoVencimento("2026-01-15", 15, "trimestral");
+  if (casoTrimestral1 === "2026-04-15") {
+    console.log("• Trimestral: 15/Jan -> +3 meses (15/Abr): ✅ OK");
+  } else {
+    console.error(`• Trimestral incorreto: esperado 2026-04-15, recebido ${casoTrimestral1}`);
+    erros++;
+  }
+
+  const casoTrimestral2 = calcularProximoVencimento("2026-11-20", 20, "trimestral");
+  if (casoTrimestral2 === "2027-02-20") {
+    console.log("• Trimestral com virada de ano: 20/Nov/2026 -> 20/Fev/2027: ✅ OK");
+  } else {
+    console.error(`• Trimestral com virada de ano incorreto: esperado 2027-02-20, recebido ${casoTrimestral2}`);
     erros++;
   }
 

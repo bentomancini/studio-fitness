@@ -1,5 +1,5 @@
 import { buscarAluno, calcularIdade } from "@/lib/services/alunos";
-import { saldoDoAluno } from "@/lib/services/planos";
+import { saldoDoAluno, buscarPlano } from "@/lib/services/planos";
 import {
   obterResumoCobrancaAluno,
   obterConfiguracoesCobranca,
@@ -51,11 +51,12 @@ export default async function FichaAlunoPage({
 
   if (!aluno) notFound();
 
-  const [idade, saldo, resumoCobranca, configCobranca] = await Promise.all([
+  const [idade, saldo, resumoCobranca, configCobranca, plano] = await Promise.all([
     calcularIdade(aluno.data_nascimento),
     saldoDoAluno(aluno.id),
     obterResumoCobrancaAluno(aluno.id),
     obterConfiguracoesCobranca(),
+    aluno.plano_padrao_id ? buscarPlano(aluno.plano_padrao_id) : Promise.resolve(null),
   ]);
 
   const isAtivo = aluno.status === "ativo";
@@ -335,11 +336,35 @@ export default async function FichaAlunoPage({
           </Link>
         </div>
 
+        {/* Resumo do Plano e Periodicidade */}
+        <div className="flex flex-col gap-2 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium text-zinc-400">Plano Vinculado</span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+                aluno.periodicidade === "trimestral"
+                  ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300"
+                  : "border-white/10 bg-zinc-800 text-zinc-300"
+              }`}
+            >
+              {aluno.periodicidade === "trimestral" ? "Trimestral (5% desc.)" : "Mensal"}
+            </span>
+          </div>
+          <p className="text-sm font-bold text-white">
+            {plano ? plano.nome : "Sem plano padrão vinculado"}
+          </p>
+          {plano && (
+            <span className="text-[11px] text-emerald-400 font-medium">
+              Frequência do plano: {plano.frequencia_semanal}x por semana
+            </span>
+          )}
+        </div>
+
         {/* Resumo do Acordo */}
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className="flex flex-col gap-1 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5">
             <span className="text-[11px] font-medium text-zinc-400">
-              Valor da Mensalidade
+              {aluno.periodicidade === "trimestral" ? "Valor Trimestral" : "Valor Mensal"}
             </span>
             <p className="text-base font-extrabold text-white">
               {aluno.valor_mensalidade ? (
@@ -348,6 +373,11 @@ export default async function FichaAlunoPage({
                 <span className="text-xs font-normal text-zinc-500">Não configurado</span>
               )}
             </p>
+            {aluno.periodicidade === "trimestral" && aluno.valor_mensalidade ? (
+              <span className="text-[10px] text-zinc-400">
+                Aprox. R$ {formatarValorBRL(aluno.valor_mensalidade / 3)}/mês
+              </span>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-1 rounded-2xl bg-zinc-900/60 p-3.5 border border-white/5">
@@ -361,6 +391,9 @@ export default async function FichaAlunoPage({
                 <span className="text-xs font-normal text-zinc-500">Não configurado</span>
               )}
             </p>
+            <span className="text-[10px] text-zinc-400">
+              {aluno.periodicidade === "trimestral" ? "A cada 3 meses" : "A cada mês"}
+            </span>
           </div>
         </div>
 
