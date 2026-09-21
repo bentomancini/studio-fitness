@@ -525,7 +525,7 @@ DIRETRIZES DE COMPORTAMENTO:
 5. Formate valores monetários em padrão brasileiro (R$ 250,00) e datas em DD/MM/AAAA.
 6. Nunca invente dados que você pode buscar com suas ferramentas. Se tiver dúvida sobre qual aluno é, use 'buscar_alunos'.`;
 
-  const historicoFormatado = (dados.historico || []).slice(-8).map((m) => ({
+  const historicoFormatado = (dados.historico || []).slice(-4).map((m) => ({
     role: m.role,
     content: m.content,
   }));
@@ -540,14 +540,14 @@ DIRETRIZES DE COMPORTAMENTO:
   try {
     let respostaAtual = await cliente.messages.create({
       model: MODELO_PADRAO,
-      max_tokens: 1024,
+      max_tokens: 500,
       system: systemPrompt,
       tools: FERRAMENTAS_COPILOTO,
       messages,
     });
 
     let iteracoes = 0;
-    const MAX_ITERACOES = 4;
+    const MAX_ITERACOES = 3;
 
     // Loop de Tool Calling
     while (respostaAtual.stop_reason === "tool_use" && iteracoes < MAX_ITERACOES) {
@@ -589,7 +589,7 @@ DIRETRIZES DE COMPORTAMENTO:
       // Chama o Claude novamente para formular a resposta final
       respostaAtual = await cliente.messages.create({
         model: MODELO_PADRAO,
-        max_tokens: 1024,
+        max_tokens: 500,
         system: systemPrompt,
         tools: FERRAMENTAS_COPILOTO,
         messages,
