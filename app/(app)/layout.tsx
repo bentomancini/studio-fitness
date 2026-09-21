@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { signOut } from "./actions";
 import { BottomNav } from "./bottom-nav";
 import { CopilotoDrawer } from "@/components/copiloto-drawer";
+import { CopilotoHeaderButton } from "@/components/copiloto-header-button";
 import { obterQtdCobrancasPendentesAlerta } from "@/lib/services/cobrancas";
 import { Dumbbell, LogOut } from "lucide-react";
 
@@ -39,16 +40,19 @@ export default async function AppLayout({
           </div>
         </div>
 
-        <form action={signOut}>
-          <button
-            type="submit"
-            aria-label="Sair da conta"
-            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-900/70 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 active:scale-95"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span>Sair</span>
-          </button>
-        </form>
+        <div className="flex items-center gap-2">
+          <CopilotoHeaderButton />
+          <form action={signOut}>
+            <button
+              type="submit"
+              aria-label="Sair da conta"
+              className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-zinc-900/70 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-red-500/30 hover:bg-red-950/40 hover:text-red-300 active:scale-95"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Sair</span>
+            </button>
+          </form>
+        </div>
       </header>
 
       {/* Conteúdo principal com limite ergonômico no mobile */}

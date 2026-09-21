@@ -78,6 +78,13 @@ export function CopilotoDrawer() {
     }
   }, [aberto]);
 
+  // Listener para abertura remota (ex: botão no cabeçalho)
+  useEffect(() => {
+    const handleAbrir = () => setAberto(true);
+    window.addEventListener("abrir-copiloto", handleAbrir);
+    return () => window.removeEventListener("abrir-copiloto", handleAbrir);
+  }, []);
+
   async function handleEnviar(textoParaEnviar?: string) {
     const texto = (textoParaEnviar || inputTexto).trim();
     if (!texto || carregando) return;
@@ -165,11 +172,11 @@ export function CopilotoDrawer() {
 
   return (
     <>
-      {/* Botão Flutuante (Posição ergonômica: no mobile fica acima da BottomNav [bottom-24], no PC fica a 32px do rodapé [sm:bottom-8 sm:right-8]) */}
+      {/* Botão Flutuante (Posicionado 100% livre da BottomNav no mobile e PC: z-50 e 112px do rodapé) */}
       <button
         onClick={() => setAberto(true)}
         aria-label="Abrir Copiloto IA do Studio"
-        className={`fixed right-4 bottom-24 z-40 flex items-center gap-2.5 rounded-full px-4 py-3 text-xs font-semibold text-white shadow-2xl transition-all duration-300 active:scale-95 sm:right-8 sm:bottom-8 sm:px-4.5 sm:py-3.5 sm:text-sm ${
+        className={`fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] z-50 flex items-center gap-2.5 rounded-full px-4 py-3 text-xs font-semibold text-white shadow-2xl transition-all duration-300 active:scale-95 sm:right-8 sm:bottom-28 sm:px-4.5 sm:py-3.5 sm:text-sm ${
           aberto
             ? "pointer-events-none scale-0 opacity-0"
             : "scale-100 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 shadow-violet-950/70 ring-2 ring-violet-400/40 hover:scale-105 hover:brightness-110 hover:shadow-violet-900/80"

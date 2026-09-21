@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exigeDono } from "@/lib/exige-login";
+import { getCurrentUser } from "@/lib/auth";
 import { processarMensagemCopiloto } from "@/lib/agente/executor";
 import { temChaveClaude } from "@/lib/agente/anthropic";
 
 export async function POST(req: NextRequest) {
   try {
     // 1. Garante que só o dono autenticado tem acesso
-    await exigeDono();
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { ok: false, resposta: "Sessão não autenticada. Faça login novamente.", acoes: [] },
+        { status: 401 }
+      );
+    }
 
     // 2. Lê os dados da requisição
     const body = await req.json();
@@ -41,7 +47,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  await exigeDono();
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ status: "unauthorized" }, { status: 401 });
+  }
   return NextResponse.json({
     status: "online",
     temChave: temChaveClaude(),
