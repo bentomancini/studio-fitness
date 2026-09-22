@@ -10,6 +10,7 @@ import {
   Users,
   Clock,
 } from "lucide-react";
+import { ClaudeIcon } from "@/components/icons/claude-icon";
 
 type BottomNavProps = {
   qtdCobrancasAlerta?: number;
@@ -33,6 +34,13 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
       label: "Agendar",
       icon: CalendarPlus,
       isActive: activePath === "/agendar",
+    },
+    {
+      href: "/copiloto",
+      label: "Claude",
+      icon: ClaudeIcon,
+      isActive: activePath.startsWith("/copiloto"),
+      isSpecial: true,
     },
     {
       href: "/cobrancas",
@@ -83,14 +91,22 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
                 }}
                 className={`btn-press relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-1 transition-all ${
                   active
-                    ? "text-emerald-400"
+                    ? tab.isSpecial
+                      ? "text-[#EA8466]"
+                      : "text-emerald-400"
+                    : tab.isSpecial
+                    ? "text-zinc-400 hover:text-[#EA8466]"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
                 {/* Indicador de aba ativa no topo */}
                 {active && (
                   <span
-                    className="absolute -top-1.5 h-1 w-7 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]"
+                    className={`absolute -top-1.5 h-1 w-7 rounded-full ${
+                      tab.isSpecial
+                        ? "bg-[#EA8466] shadow-[0_0_10px_#D97757]"
+                        : "bg-emerald-400 shadow-[0_0_10px_#10b981]"
+                    }`}
                     aria-hidden
                   />
                 )}
@@ -99,12 +115,16 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
                 <div className="relative">
                   <div
                     className={`flex h-7 w-7 items-center justify-center rounded-xl transition-all ${
-                      active ? "bg-emerald-500/15" : ""
+                      active
+                        ? tab.isSpecial
+                          ? "bg-[#D97757]/20 text-[#EA8466]"
+                          : "bg-emerald-500/15"
+                        : ""
                     }`}
                   >
                     <Icon
                       className={`h-5 w-5 transition-transform ${
-                        active ? "scale-110 stroke-[2.4]" : "stroke-[1.8]"
+                        active ? "scale-110" : ""
                       }`}
                     />
                   </div>
@@ -118,7 +138,11 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
 
                 <span
                   className={`text-[10px] font-medium tracking-tight ${
-                    active ? "font-semibold text-emerald-300" : "text-zinc-400"
+                    active
+                      ? tab.isSpecial
+                        ? "font-semibold text-[#EA8466]"
+                        : "font-semibold text-emerald-300"
+                      : "text-zinc-400"
                   }`}
                 >
                   {tab.label}
