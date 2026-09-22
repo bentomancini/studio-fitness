@@ -24,16 +24,17 @@ export function BotaoExcluirAluno({ id }: { id: string }) {
 
   if (confirmando) {
     return (
-      <div className="flex items-center gap-1 rounded-xl border border-red-500/30 bg-red-950/40 p-1">
-        <span className="px-1 text-[10px] font-semibold text-red-300">
+      <div className="flex items-center gap-1 rounded-xl border border-red-500/40 bg-red-950/80 p-0.5 shrink-0 animate-in fade-in duration-150">
+        <span className="hidden sm:inline px-1 text-[10px] font-bold text-red-300">
           Excluir?
         </span>
         <button
           type="button"
           disabled={pending}
           onClick={executarExclusao}
-          className="btn-press flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm disabled:opacity-50"
+          className="btn-press flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm hover:bg-red-500 disabled:opacity-50"
           aria-label="Confirmar exclusão"
+          title="Confirmar exclusão"
         >
           {pending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -45,8 +46,9 @@ export function BotaoExcluirAluno({ id }: { id: string }) {
           type="button"
           disabled={pending}
           onClick={() => setConfirmando(false)}
-          className="btn-press flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-zinc-400 hover:text-white"
+          className="btn-press flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-zinc-900 text-zinc-400 hover:text-white"
           aria-label="Cancelar exclusão"
+          title="Cancelar"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -59,7 +61,8 @@ export function BotaoExcluirAluno({ id }: { id: string }) {
       type="button"
       onClick={() => setConfirmando(true)}
       aria-label="Excluir aluno"
-      className="btn-press flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-zinc-500 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-400 active:scale-90"
+      title="Excluir aluno"
+      className="btn-press flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-transparent text-zinc-500 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-400 active:scale-90"
     >
       <Trash2 className="h-4 w-4" />
     </button>
