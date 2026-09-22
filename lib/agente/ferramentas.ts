@@ -660,6 +660,24 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
     },
   },
   {
+    name: "excluir_cobranca",
+    description:
+      "Exclui ou cancela uma cobrança de um aluno no estúdio, removendo-a do painel e impedindo que seja recriada.",
+    input_schema: {
+      type: "object",
+      properties: {
+        cobranca_id: {
+          type: "string",
+          description: "ID da cobrança a excluir.",
+        },
+        nome_aluno: {
+          type: "string",
+          description: "Nome do aluno cuja cobrança deve ser excluída.",
+        },
+      },
+    },
+  },
+  {
     name: "obter_configuracoes_cobranca",
     description:
       "Consulta as configurações financeiras do estúdio: chave PIX cadastrada, nome do estúdio e modelos de mensagens de WhatsApp.",

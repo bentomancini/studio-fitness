@@ -40,6 +40,10 @@ export async function acaoCancelarCobranca(cobrancaId: string) {
   return await cancelarCobranca(cobrancaId);
 }
 
+export async function acaoExcluirCobranca(cobrancaId: string) {
+  return await cancelarCobranca(cobrancaId);
+}
+
 export async function acaoSalvarConfiguracoesCobranca(dados: {
   chave_pix: string;
   studio_nome: string;

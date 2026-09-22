@@ -203,14 +203,13 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
 
   if (!alunos || alunos.length === 0) return;
 
-  // Busca cobranças recentes desses alunos
+  // Busca cobranças recentes desses alunos (incluindo canceladas para respeitar a decisão do dono)
   const alunoIds = alunos.map((a) => a.id);
   const { data: cobrancasExistentes } = await supabase
     .from("cobrancas")
     .select("aluno_id, mes_referencia, data_vencimento, status, tipo")
     .in("aluno_id", alunoIds)
-    .eq("tipo", "recorrente")
-    .neq("status", "cancelado");
+    .eq("tipo", "recorrente");
 
   // Mapeia cobranças por aluno
   const cobrancasPorAluno = new Map<string, typeof cobrancasExistentes>();
@@ -227,12 +226,19 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
     const isTrimestral = aluno.periodicidade === "trimestral";
 
     if (isTrimestral) {
+      // Se há cobrança cancelada no mês atual, respeita a exclusão feita pelo usuário
+      const canceladaNoMes = listaDoAluno.some(
+        (c) => c.mes_referencia === mesAtualRef && c.status === "cancelado"
+      );
+      if (canceladaNoMes) continue;
+
       // Para plano trimestral: verifica se há cobrança pendente ou se a última cobrança cobre o período
       const temPendente = listaDoAluno.some((c) => c.status === "pendente");
       if (temPendente) continue;
 
       // Se há cobrança paga com vencimento ainda no futuro ou nos últimos 2 meses, não precisa gerar
       const temRecente = listaDoAluno.some((c) => {
+        if (c.status === "cancelado") return false;
         if (!c.data_vencimento) return false;
         // Se a data de vencimento é maior que hoje, ainda está no ciclo
         if (c.data_vencimento >= hoje) return true;
@@ -243,7 +249,7 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
       });
       if (temRecente) continue;
     } else {
-      // Para plano mensal tradicional: basta checar se tem cobrança no mês atual
+      // Para plano mensal tradicional: basta checar se tem cobrança no mês atual (pendente, paga ou cancelada)
       const temNoMes = listaDoAluno.some((c) => c.mes_referencia === mesAtualRef);
       if (temNoMes) continue;
     }
@@ -641,23 +647,59 @@ export async function criarCobrancaAvulsa(dados: {
 }
 
 /**
- * Cancela uma cobrança (ex.: cobrança criada por engano).
+ * Cancela ou exclui uma cobrança.
+ * Se for avulsa, deleta o registro definitivamente.
+ * Se for recorrente, atualiza o status para 'cancelado' e também cancela quaisquer
+ * outras cobranças pendentes duplicadas do mesmo aluno no mesmo mês de referência.
+ * Isso garante que o motor de sincronização não volte a gerar cobranças
+ * para o mês cancelado, respeitando a decisão de exclusão do dono.
  */
 export async function cancelarCobranca(cobrancaId: string): Promise<{ ok: boolean; error?: string }> {
   const supabase = await exigeDono();
 
-  const { error } = await supabase
+  // Verifica o tipo da cobrança
+  const { data: cobranca, error: errBusca } = await supabase
     .from("cobrancas")
-    .update({ status: "cancelado" })
-    .eq("id", cobrancaId);
+    .select("id, aluno_id, tipo, mes_referencia, status")
+    .eq("id", cobrancaId)
+    .single();
 
-  if (error) {
-    return { ok: false, error: `Erro ao cancelar cobrança: ${error.message}` };
+  if (errBusca || !cobranca) {
+    return { ok: false, error: "Cobrança não encontrada." };
+  }
+
+  if (cobranca.tipo === "avulsa") {
+    const { error } = await supabase.from("cobrancas").delete().eq("id", cobrancaId);
+    if (error) {
+      return { ok: false, error: `Erro ao excluir cobrança avulsa: ${error.message}` };
+    }
+  } else {
+    // Para recorrentes: marca como cancelado
+    const { error } = await supabase
+      .from("cobrancas")
+      .update({ status: "cancelado" })
+      .eq("id", cobrancaId);
+
+    if (error) {
+      return { ok: false, error: `Erro ao cancelar cobrança: ${error.message}` };
+    }
+
+    // Se houver cobranças pendentes duplicadas no mesmo mês de referência do aluno, cancela também:
+    if (cobranca.aluno_id && cobranca.mes_referencia) {
+      await supabase
+        .from("cobrancas")
+        .update({ status: "cancelado" })
+        .eq("aluno_id", cobranca.aluno_id)
+        .eq("mes_referencia", cobranca.mes_referencia)
+        .eq("status", "pendente");
+    }
   }
 
   revalidatePath("/cobrancas");
   return { ok: true };
 }
+
+export const excluirCobranca = cancelarCobranca;
 
 /**
  * Retorna a quantidade de cobranças pendentes que estão vencidas ou vencem hoje.

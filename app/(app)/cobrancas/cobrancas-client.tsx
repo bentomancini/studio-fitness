@@ -217,9 +217,9 @@ export function CobrancasClient({
     }
   }
 
-  // Cancelar cobrança
+  // Excluir ou cancelar cobrança
   async function handleCancelarCobranca(cobrancaId: string) {
-    if (!confirm("Tem certeza que deseja cancelar esta cobrança?")) return;
+    if (!confirm("Tem certeza que deseja excluir esta cobrança?")) return;
 
     setCancelandoId(cobrancaId);
     try {
@@ -227,11 +227,11 @@ export function CobrancasClient({
       if (res.error) {
         showToast(res.error, "error");
       } else {
-        showToast("Cobrança cancelada.", "info");
+        showToast("Cobrança excluída com sucesso!", "success");
         router.refresh();
       }
     } catch (err: unknown) {
-      showToast(err instanceof Error ? err.message : "Erro ao cancelar", "error");
+      showToast(err instanceof Error ? err.message : "Erro ao excluir cobrança", "error");
     } finally {
       setCancelandoId(null);
     }
@@ -420,11 +420,11 @@ export function CobrancasClient({
             <span>Pago</span>
           </button>
 
-          {/* Cancelar cobrança avulsa ou indevida */}
+          {/* Cancelar ou excluir cobrança */}
           <button
             onClick={() => handleCancelarCobranca(cobranca.id)}
             disabled={cancelandoId === cobranca.id}
-            title="Cancelar esta cobrança"
+            title="Excluir esta cobrança"
             className="btn-press flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-zinc-900/60 text-zinc-500 hover:border-red-500/30 hover:text-red-400 transition-colors"
           >
             {cancelandoId === cobranca.id ? (

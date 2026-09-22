@@ -1194,7 +1194,8 @@ export async function executarFerramenta(
         };
       }
 
-      case "cancelar_cobranca": {
+      case "cancelar_cobranca":
+      case "excluir_cobranca": {
         let cobrancaId = String(args.cobranca_id || "");
         if (!cobrancaId && typeof args.nome_aluno === "string") {
           const painel = await listarPainelCobrancas();
@@ -1208,7 +1209,7 @@ export async function executarFerramenta(
         }
 
         if (!cobrancaId) {
-          return { resultado: { erro: "Cobrança não encontrada para cancelamento." } };
+          return { resultado: { erro: "Cobrança não encontrada para cancelamento/exclusão." } };
         }
 
         const res = await cancelarCobranca(cobrancaId);
@@ -1220,8 +1221,8 @@ export async function executarFerramenta(
           resultado: { ok: true, cobranca_id: cobrancaId },
           acao: {
             tipo: "cobranca_cancelamento",
-            titulo: "Cobrança Cancelada",
-            detalhes: "A cobrança foi cancelada no sistema.",
+            titulo: "Cobrança Excluída / Cancelada",
+            detalhes: "A cobrança foi removida do painel com sucesso e não será recriada automaticamente.",
             sucesso: true,
           },
         };
