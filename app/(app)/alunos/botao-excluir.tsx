@@ -5,12 +5,22 @@ import { removerAlunoAction } from "./actions";
 import { showToast } from "@/components/toast";
 import { Trash2, Check, X, Loader2 } from "lucide-react";
 
-export function BotaoExcluirAluno({ id }: { id: string }) {
+export function BotaoExcluirAluno({
+  id,
+  onExcluir,
+}: {
+  id: string;
+  onExcluir?: () => void;
+}) {
   const [confirmando, setConfirmando] = useState(false);
   const [pending, setPending] = useState(false);
 
   const executarExclusao = async () => {
     setPending(true);
+    setConfirmando(false);
+    if (onExcluir) {
+      onExcluir();
+    }
     try {
       await removerAlunoAction(id);
       showToast("Aluno excluído com sucesso!", "success");
@@ -18,7 +28,6 @@ export function BotaoExcluirAluno({ id }: { id: string }) {
       showToast("Erro ao excluir aluno.", "error");
     } finally {
       setPending(false);
-      setConfirmando(false);
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -131,7 +131,14 @@ export function CobrancasClient({
   // Contatos locais otimistas
   const [contatosLocais, setContatosLocais] = useState<Record<string, { qtd: number; em: string }>>({});
 
-  const { totais, atrasadas, hoje: hojeLista, proximos, pagasMes } = painelInicial;
+  const [painel, setPainel] = useState<PainelCobrancas>(painelInicial);
+
+  // Sincroniza se o servidor recarregar
+  useEffect(() => {
+    setPainel(painelInicial);
+  }, [painelInicial]);
+
+  const { totais, atrasadas, hoje: hojeLista, proximos, pagasMes } = painel;
 
   // Filtro de busca
   function filtrarPorBusca(lista: CobrancaComAluno[]) {
@@ -152,6 +159,9 @@ export function CobrancasClient({
 
   // Ao clicar em "Cobrar no WhatsApp"
   async function handleRegistrarContato(cobrancaId: string) {
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
     const atual = contatosLocais[cobrancaId] ?? {
       qtd: atrasadas.concat(hojeLista, proximos).find((c) => c.id === cobrancaId)?.qtd_contatos ?? 0,
       em: new Date().toISOString(),
@@ -168,28 +178,69 @@ export function CobrancasClient({
     }
   }
 
-  // Ao confirmar pagamento no modal
+  // Ao confirmar pagamento no modal (0ms feedback otimista)
   async function handleConfirmarPagamento(e: React.FormEvent) {
     e.preventDefault();
     if (!cobrancaParaPagar) return;
 
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(12);
+    }
+
+    const cobrancaPaga: CobrancaComAluno = {
+      ...cobrancaParaPagar,
+      status: "pago",
+      data_pagamento: dataPagamento,
+      forma_pagamento: formaPagamento,
+    };
+
+    const valorPago = cobrancaPaga.valor;
+
+    // 1) Feedback visual instantâneo: fecha modal e move card para Pagas
+    setCobrancaParaPagar(null);
+    showToast("Pagamento registrado! Próxima mensalidade agendada.", "success");
+
+    setPainel((prev) => {
+      const eraAtrasada = prev.atrasadas.some((c) => c.id === cobrancaPaga.id);
+      const eraHoje = prev.hoje.some((c) => c.id === cobrancaPaga.id);
+      const eraProximo = prev.proximos.some((c) => c.id === cobrancaPaga.id);
+
+      return {
+        ...prev,
+        totais: {
+          ...prev.totais,
+          totalAtrasado: eraAtrasada ? Math.max(0, prev.totais.totalAtrasado - valorPago) : prev.totais.totalAtrasado,
+          qtdAtrasado: eraAtrasada ? Math.max(0, prev.totais.qtdAtrasado - 1) : prev.totais.qtdAtrasado,
+          totalHoje: eraHoje ? Math.max(0, prev.totais.totalHoje - valorPago) : prev.totais.totalHoje,
+          qtdHoje: eraHoje ? Math.max(0, prev.totais.qtdHoje - 1) : prev.totais.qtdHoje,
+          qtdProximos7Dias: eraProximo ? Math.max(0, prev.totais.qtdProximos7Dias - 1) : prev.totais.qtdProximos7Dias,
+          totalRecebidoMes: prev.totais.totalRecebidoMes + valorPago,
+          qtdRecebidoMes: prev.totais.qtdRecebidoMes + 1,
+        },
+        atrasadas: prev.atrasadas.filter((c) => c.id !== cobrancaPaga.id),
+        hoje: prev.hoje.filter((c) => c.id !== cobrancaPaga.id),
+        proximos: prev.proximos.filter((c) => c.id !== cobrancaPaga.id),
+        pagasMes: [cobrancaPaga, ...prev.pagasMes],
+      };
+    });
+
     setProcessandoPagamento(true);
     try {
       const res = await acaoMarcarComoPago({
-        cobrancaId: cobrancaParaPagar.id,
+        cobrancaId: cobrancaPaga.id,
         formaPagamento,
         dataPagamento,
       });
 
       if (res.error) {
         showToast(res.error, "error");
+        setPainel(painelInicial); // reverte em caso de erro
       } else {
-        showToast("Pagamento registrado! Próxima mensalidade agendada.", "success");
-        setCobrancaParaPagar(null);
         router.refresh();
       }
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : "Erro ao processar pagamento", "error");
+      setPainel(painelInicial);
     } finally {
       setProcessandoPagamento(false);
     }
@@ -199,6 +250,10 @@ export function CobrancasClient({
   async function handleDesfazerPagamento(cobrancaId: string) {
     if (!confirm("Deseja realmente desfazer este pagamento e retornar a cobrança para pendente?")) {
       return;
+    }
+
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
     }
 
     setDesfazendoId(cobrancaId);
@@ -217,21 +272,51 @@ export function CobrancasClient({
     }
   }
 
-  // Excluir ou cancelar cobrança
+  // Excluir ou cancelar cobrança (0ms feedback otimista)
   async function handleCancelarCobranca(cobrancaId: string) {
     if (!confirm("Tem certeza que deseja excluir esta cobrança?")) return;
+
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate([12, 25]);
+    }
+
+    // 1) Feedback visual instantâneo: remove da tela e recalcula totais em 0ms
+    setPainel((prev) => {
+      const eraAtrasada = prev.atrasadas.find((c) => c.id === cobrancaId);
+      const eraHoje = prev.hoje.find((c) => c.id === cobrancaId);
+      const eraProximo = prev.proximos.find((c) => c.id === cobrancaId);
+      const valor = (eraAtrasada || eraHoje || eraProximo)?.valor ?? 0;
+
+      return {
+        ...prev,
+        totais: {
+          ...prev.totais,
+          totalAtrasado: eraAtrasada ? Math.max(0, prev.totais.totalAtrasado - valor) : prev.totais.totalAtrasado,
+          qtdAtrasado: eraAtrasada ? Math.max(0, prev.totais.qtdAtrasado - 1) : prev.totais.qtdAtrasado,
+          totalHoje: eraHoje ? Math.max(0, prev.totais.totalHoje - valor) : prev.totais.totalHoje,
+          qtdHoje: eraHoje ? Math.max(0, prev.totais.qtdHoje - 1) : prev.totais.qtdHoje,
+          qtdProximos7Dias: eraProximo ? Math.max(0, prev.totais.qtdProximos7Dias - 1) : prev.totais.qtdProximos7Dias,
+        },
+        atrasadas: prev.atrasadas.filter((c) => c.id !== cobrancaId),
+        hoje: prev.hoje.filter((c) => c.id !== cobrancaId),
+        proximos: prev.proximos.filter((c) => c.id !== cobrancaId),
+      };
+    });
+
+    showToast("Cobrança excluída com sucesso!", "success");
 
     setCancelandoId(cobrancaId);
     try {
       const res = await acaoCancelarCobranca(cobrancaId);
       if (res.error) {
         showToast(res.error, "error");
+        setPainel(painelInicial);
       } else {
-        showToast("Cobrança excluída com sucesso!", "success");
         router.refresh();
       }
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : "Erro ao excluir cobrança", "error");
+      setPainel(painelInicial);
     } finally {
       setCancelandoId(null);
     }

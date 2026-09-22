@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Calendar,
   CalendarPlus,
@@ -20,6 +20,12 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
   const pathname = usePathname();
   // Estado otimista para feedback instantâneo ao tocar
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+
+  // Limpa o estado pendente assim que a nova rota carrega
+  useEffect(() => {
+    setPendingPath(null);
+  }, [pathname]);
+
   const activePath = pendingPath && pendingPath !== pathname ? pendingPath : pathname;
 
   const tabs = [
@@ -85,6 +91,9 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
                 key={tab.href}
                 href={tab.href}
                 onClick={() => {
+                  if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+                    navigator.vibrate(8);
+                  }
                   if (pathname !== tab.href) {
                     setPendingPath(tab.href);
                   }

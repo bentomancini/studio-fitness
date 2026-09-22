@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { alternarStatus } from "./actions";
 import { BotaoExcluirAluno } from "./botao-excluir";
@@ -34,10 +34,25 @@ function extrairIniciais(nome: string) {
 }
 
 export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
+  const [listaAlunos, setListaAlunos] = useState<Aluno[]>(alunos);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativo" | "inativo">("todos");
 
-  const filtrados = alunos.filter((aluno) => {
+  useEffect(() => {
+    setListaAlunos(alunos);
+  }, [alunos]);
+
+  const handleAlternarStatusOtimista = (id: string, novoStatus: "ativo" | "inativo") => {
+    setListaAlunos((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: novoStatus } : a))
+    );
+  };
+
+  const handleExcluirOtimista = (id: string) => {
+    setListaAlunos((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const filtrados = listaAlunos.filter((aluno) => {
     const combinaBusca =
       aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
       (aluno.telefone && aluno.telefone.includes(busca));
@@ -46,7 +61,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
     return combinaBusca && combinaStatus;
   });
 
-  const totalAtivos = alunos.filter((a) => a.status === "ativo").length;
+  const totalAtivos = listaAlunos.filter((a) => a.status === "ativo").length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -259,8 +274,12 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
                     <BotaoAlternarStatusAluno
                       id={aluno.id}
                       status={aluno.status}
+                      onAlternar={(novo) => handleAlternarStatusOtimista(aluno.id, novo)}
                     />
-                    <BotaoExcluirAluno id={aluno.id} />
+                    <BotaoExcluirAluno
+                      id={aluno.id}
+                      onExcluir={() => handleExcluirOtimista(aluno.id)}
+                    />
                   </div>
                 </div>
               </li>
@@ -275,22 +294,41 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
 function BotaoAlternarStatusAluno({
   id,
   status,
+  onAlternar,
 }: {
   id: string;
   status: "ativo" | "inativo";
+  onAlternar?: (novo: "ativo" | "inativo") => void;
 }) {
   const [pending, setPending] = useState(false);
   const isAtivo = status === "ativo";
 
   const handleAlternar = async () => {
+    const novoStatus: "ativo" | "inativo" = isAtivo ? "inativo" : "ativo";
+
+    // 1) Feedback tátil imediato no celular
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+
+    // 2) Reação visual instantânea (0ms delay)
+    if (onAlternar) {
+      onAlternar(novoStatus);
+    }
+
+    showToast(
+      isAtivo ? "Aluno inativado." : "Aluno ativado com sucesso!",
+      "success"
+    );
+
     setPending(true);
     try {
       await alternarStatus(id, status);
-      showToast(
-        isAtivo ? "Aluno inativado." : "Aluno ativado com sucesso!",
-        "success"
-      );
     } catch {
+      // Se falhar na rede, desfaz
+      if (onAlternar) {
+        onAlternar(status);
+      }
       showToast("Erro ao alterar status.", "error");
     } finally {
       setPending(false);

@@ -1,9 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-export const MODELO_PADRAO = process.env.CLAUDE_MODEL || "claude-haiku-4-5-20251001";
+/**
+ * Retorna o identificador do modelo Claude higienizado contra quebras de linha,
+ * espaços e caracteres invisíveis comuns em variáveis de ambiente da Vercel.
+ */
+export function obterModeloClaude(): string {
+  const raw = process.env.CLAUDE_MODEL || "";
+  const limpo = raw.trim().replace(/[\r\n\t"']/g, "");
+  return limpo || "claude-haiku-4-5-20251001";
+}
+
+export const MODELO_PADRAO = obterModeloClaude();
 
 export function obterClienteClaude(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const rawKey = process.env.ANTHROPIC_API_KEY || "";
+  const apiKey = rawKey.trim().replace(/[\r\n\t"']/g, "");
   if (!apiKey || !apiKey.startsWith("sk-ant-")) {
     return null;
   }
@@ -11,6 +22,7 @@ export function obterClienteClaude(): Anthropic | null {
 }
 
 export function temChaveClaude(): boolean {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const rawKey = process.env.ANTHROPIC_API_KEY || "";
+  const apiKey = rawKey.trim().replace(/[\r\n\t"']/g, "");
   return Boolean(apiKey && apiKey.startsWith("sk-ant-"));
 }

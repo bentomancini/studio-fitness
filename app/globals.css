@@ -66,15 +66,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Feedback tátil imediato no toque (mobile e desktop) */
 .btn-press {
-  transition: transform 0.05s ease, opacity 0.05s ease;
+  transition: transform 0.04s cubic-bezier(0.2, 0, 0, 1), opacity 0.04s ease, filter 0.04s ease;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   transform: translateZ(0);
+  will-change: transform, opacity;
 }
 .btn-press:active {
-  transform: scale(0.96) translateZ(0);
-  opacity: 0.85;
+  transform: scale(0.95) translateZ(0);
+  opacity: 0.82;
+  filter: brightness(1.1);
 }
 
 /* Painéis de vidro otimizados para GPU mobile (60-120 FPS sem lag) */
@@ -94,10 +96,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   transform: translateZ(0);
 }
 
-/* Transições suaves para botões e cards */
+/* Transições suaves e ultrarrápidas para botões e cards */
 .interactive-card {
-  transition: transform 0.1s ease, border-color 0.1s ease;
+  transition: transform 0.08s ease, border-color 0.08s ease, background-color 0.08s ease;
   transform: translateZ(0);
+  will-change: transform;
 }
 
 .interactive-card:active {

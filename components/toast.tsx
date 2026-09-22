@@ -14,6 +14,21 @@ type ToastMessage = {
 let toastListeners: ((toast: ToastMessage) => void)[] = [];
 
 export function showToast(text: string, type: ToastType = "success") {
+  // Feedback tátil nativo em dispositivos móveis suportados
+  if (typeof window !== "undefined" && typeof navigator !== "undefined" && navigator.vibrate) {
+    try {
+      if (type === "success") {
+        navigator.vibrate(10);
+      } else if (type === "error") {
+        navigator.vibrate([30, 40, 30]);
+      } else {
+        navigator.vibrate(8);
+      }
+    } catch {
+      // Falha silenciosa caso o navegador restrinja
+    }
+  }
+
   const toast: ToastMessage = { id: Date.now(), text, type };
   toastListeners.forEach((listener) => listener(toast));
 }

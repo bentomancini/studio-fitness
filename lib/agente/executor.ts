@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { obterClienteClaude, MODELO_PADRAO } from "./anthropic";
+import { obterClienteClaude, obterModeloClaude, MODELO_PADRAO } from "./anthropic";
 import { FERRAMENTAS_COPILOTO } from "./ferramentas";
 import {
   dataHoje,
@@ -1372,6 +1372,7 @@ export async function processarMensagemCopiloto(dados: {
     };
   }
 
+  const anthropic = cliente;
   const hoje = dataHoje();
   const dow = diaDaSemana(hoje);
   const nomeDia = DIAS_SEMANA[dow];
@@ -1408,15 +1409,48 @@ DIRETRIZES DE EXECUÇÃO:
   ];
 
   const acoesAcumuladas: AcaoExecutada[] = [];
+  let modeloEfetivo = obterModeloClaude();
 
   try {
-    let respostaAtual = await cliente.messages.create({
-      model: MODELO_PADRAO,
-      max_tokens: 1500,
-      system: systemPrompt,
-      tools: FERRAMENTAS_COPILOTO,
-      messages,
-    });
+    async function chamarClaude(msgs: Anthropic.MessageParam[]): Promise<Anthropic.Message> {
+      try {
+        return await anthropic.messages.create({
+          model: modeloEfetivo,
+          max_tokens: 1500,
+          system: systemPrompt,
+          tools: FERRAMENTAS_COPILOTO,
+          messages: msgs,
+        });
+      } catch (errPrimario: unknown) {
+        const msgErr = errPrimario instanceof Error ? errPrimario.message : String(errPrimario);
+        if (msgErr.includes("not_found_error") || msgErr.includes("404")) {
+          const fallbacks = [
+            "claude-haiku-4-5-20251001",
+            "claude-sonnet-4-5-20250929",
+            "claude-3-5-haiku-20241022",
+          ].filter((m) => m !== modeloEfetivo);
+
+          for (const fb of fallbacks) {
+            try {
+              const res = await anthropic.messages.create({
+                model: fb,
+                max_tokens: 1500,
+                system: systemPrompt,
+                tools: FERRAMENTAS_COPILOTO,
+                messages: msgs,
+              });
+              modeloEfetivo = fb;
+              return res;
+            } catch {
+              // Continua para o próximo fallback
+            }
+          }
+        }
+        throw errPrimario;
+      }
+    }
+
+    let respostaAtual = await chamarClaude(messages);
 
     let iteracoes = 0;
     const MAX_ITERACOES = 6;
@@ -1464,13 +1498,7 @@ DIRETRIZES DE EXECUÇÃO:
       });
 
       // Chama o Claude novamente para formular a resposta final ou nova tool
-      respostaAtual = await cliente.messages.create({
-        model: MODELO_PADRAO,
-        max_tokens: 1500,
-        system: systemPrompt,
-        tools: FERRAMENTAS_COPILOTO,
-        messages,
-      });
+      respostaAtual = await chamarClaude(messages);
     }
 
     // Extrai o texto final gerado pelo Claude
