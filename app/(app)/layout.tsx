@@ -4,6 +4,18 @@ import { signOut } from "./actions";
 import { BottomNav } from "./bottom-nav";
 import { obterQtdCobrancasPendentesAlerta } from "@/lib/services/cobrancas";
 import { Dumbbell, LogOut } from "lucide-react";
+import { Suspense } from "react";
+
+async function BottomNavComAlerta() {
+  let qtdCobrancasAlerta = 0;
+  try {
+    qtdCobrancasAlerta = await obterQtdCobrancasPendentesAlerta();
+  } catch {
+    // Falha tolerante caso o banco esteja carregando
+  }
+
+  return <BottomNav qtdCobrancasAlerta={qtdCobrancasAlerta} />;
+}
 
 export default async function AppLayout({
   children,
@@ -12,13 +24,6 @@ export default async function AppLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-
-  let qtdCobrancasAlerta = 0;
-  try {
-    qtdCobrancasAlerta = await obterQtdCobrancasPendentesAlerta();
-  } catch {
-    // Falha tolerante caso o banco esteja carregando
-  }
 
   return (
     <div className="flex h-full min-h-dvh flex-1 flex-col bg-zinc-950 text-zinc-100">
@@ -58,7 +63,9 @@ export default async function AppLayout({
       </main>
 
       {/* Barra de navegação inferior estilo dock iOS */}
-      <BottomNav qtdCobrancasAlerta={qtdCobrancasAlerta} />
+      <Suspense fallback={<BottomNav />}>
+        <BottomNavComAlerta />
+      </Suspense>
     </div>
   );
 }
