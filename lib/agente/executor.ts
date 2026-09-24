@@ -70,6 +70,7 @@ export type RespostaCopiloto = {
   ok: boolean;
   resposta: string;
   acoes: AcaoExecutada[];
+  modeloUsado?: string;
   erro?: string;
 };
 
@@ -1484,6 +1485,7 @@ DIRETRIZES DE EXECUÇÃO:
       ok: true,
       resposta: textoFinal || "Ação concluída com sucesso.",
       acoes: acoesAcumuladas,
+      modeloUsado: respostaAtual.model,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
