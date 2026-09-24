@@ -3,15 +3,13 @@ import { isDono } from "@/lib/dono";
 import { cache } from "react";
 
 /**
- * Retorna o usuário logado com cache de requisição (React cache).
- * Se chamado múltiplas vezes no mesmo render, executa a checagem remota apenas uma vez.
+ * Valida a identidade do dono com cache por renderização.
+ * Em projetos com JWT assimétrico, getClaims verifica a assinatura localmente
+ * (após carregar as chaves públicas), sem consultar o Auth em cada navegação.
  */
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user || !isDono(user.id)) return null;
-  return user;
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims?.sub || !isDono(data.claims.sub)) return null;
+  return data.claims;
 });

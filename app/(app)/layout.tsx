@@ -28,7 +28,7 @@ export default async function AppLayout({
   return (
     <div className="flex h-full min-h-dvh flex-1 flex-col bg-zinc-950 text-zinc-100">
       {/* Cabeçalho translúcido moderno */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-zinc-950/80 px-4 py-2.5 pt-[calc(env(safe-area-inset-top)+0.6rem)] backdrop-blur-xl">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-zinc-950 px-4 py-2.5 pt-[calc(env(safe-area-inset-top)+0.6rem)] sm:bg-zinc-950/80 sm:backdrop-blur-xl">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-zinc-950 shadow-md shadow-emerald-500/20">
             <Dumbbell className="h-4 w-4 stroke-[2.5]" />

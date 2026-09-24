@@ -203,7 +203,7 @@ export function CopilotoClient() {
   return (
     <div className="flex h-[calc(100dvh-5.5rem)] flex-col -mx-4 -my-5">
       {/* Cabeçalho do Copiloto */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-zinc-950/90 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-zinc-950 px-4 py-3 sm:bg-zinc-950/90 sm:backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#D97757]/30 to-[#EA8466]/20 border border-[#D97757]/40 text-[#EA8466] shadow-md shadow-[#D97757]/20">
             <ClaudeIcon className="h-5 w-5" />
@@ -329,7 +329,7 @@ export function CopilotoClient() {
       </div>
 
       {/* Barra de entrada de texto inferior */}
-      <div className="sticky bottom-0 border-t border-white/10 bg-zinc-950/95 p-3 backdrop-blur-xl">
+      <div className="sticky bottom-0 border-t border-white/10 bg-zinc-950 p-3 sm:bg-zinc-950/95 sm:backdrop-blur-xl">
         <form
           onSubmit={(e) => {
             e.preventDefault();

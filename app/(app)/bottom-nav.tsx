@@ -79,7 +79,7 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
         />
       )}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950 pb-[env(safe-area-inset-bottom)] sm:bg-zinc-950/90 sm:backdrop-blur-md">
         <div className="mx-auto flex max-w-md items-center justify-around px-2 py-1.5">
           {tabs.map((tab) => {
             const Icon = tab.icon;

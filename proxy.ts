@@ -60,7 +60,7 @@ export async function proxy(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
@@ -70,24 +70,26 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
+          Object.entries(headers).forEach(([key, value]) =>
+            response.headers.set(key, value)
+          );
         },
       },
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
-  if (user && !isDono(user.id)) {
+  if (claims && !isDono(claims.sub)) {
     return negarAcesso();
   }
 
-  if (user && isLoginPage) {
+  if (claims && isLoginPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (!user && !isLoginPage) {
+  if (!claims && !isLoginPage) {
     return negarAcesso();
   }
 

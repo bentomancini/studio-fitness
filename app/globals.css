@@ -17,7 +17,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-geist-mono), monospace;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 * {
@@ -70,8 +70,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  transform: translateZ(0);
-  will-change: transform, opacity;
 }
 .btn-press:active {
   transform: scale(0.95) translateZ(0);
@@ -79,28 +77,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   filter: brightness(1.1);
 }
 
-/* Painéis de vidro otimizados para GPU mobile (60-120 FPS sem lag) */
+/* Fundos quase opacos dispensam blur por cartão, caro no Safari iOS. */
 .glass-panel {
-  background: rgba(18, 18, 23, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(18, 18, 23, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transform: translateZ(0);
 }
 
 .glass-panel-elevated {
-  background: rgba(24, 24, 30, 0.94);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(24, 24, 30, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  transform: translateZ(0);
 }
 
 /* Transições suaves e ultrarrápidas para botões e cards */
 .interactive-card {
   transition: transform 0.08s ease, border-color 0.08s ease, background-color 0.08s ease;
-  transform: translateZ(0);
-  will-change: transform;
 }
 
 .interactive-card:active {

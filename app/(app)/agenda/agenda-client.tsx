@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useRef } from "react";
+import { useActionState, useState, useRef, useMemo } from "react";
 import {
   dataHoje,
   diaDaSemana,
@@ -101,23 +101,38 @@ export function Agenda({
   const [aba, setAba] = useState<"dia" | "semana">("dia");
   const [data, setData] = useState(dataHoje());
 
-  const agendados = (aulaId: string, d: string) =>
-    agendamentos
-      .filter((g) => g.aula_id === aulaId && g.data === d)
-      .map((g) => {
-        const aluno = alunos.find((a) => a.id === g.aluno_id);
-        return {
-          alunoId: g.aluno_id,
-          nome: aluno?.nome ?? "?",
-          telefone: aluno?.telefone ?? "",
-        };
+  // Índices compartilhados pelas visões de dia e semana: não percorre todos os
+  // agendamentos para cada cartão, especialmente ao trocar de data no celular.
+  const agendamentosPorAulaData = useMemo(() => {
+    const alunosPorId = new Map(alunos.map((aluno) => [aluno.id, aluno]));
+    const indice = new Map<string, { alunoId: string; nome: string; telefone: string }[]>();
+    for (const agendamento of agendamentos) {
+      const chave = `${agendamento.aula_id}:${agendamento.data}`;
+      const lista = indice.get(chave) ?? [];
+      const aluno = alunosPorId.get(agendamento.aluno_id);
+      lista.push({
+        alunoId: agendamento.aluno_id,
+        nome: aluno?.nome ?? "?",
+        telefone: aluno?.telefone ?? "",
       });
+      indice.set(chave, lista);
+    }
+    return indice;
+  }, [agendamentos, alunos]);
+
+  const suspensoesPorAulaData = useMemo(
+    () => new Set(suspensoes.map((s) => `${s.aula_id}:${s.data}`)),
+    [suspensoes]
+  );
+
+  const agendados = (aulaId: string, d: string) =>
+    agendamentosPorAulaData.get(`${aulaId}:${d}`) ?? [];
 
   const ocupadas = (aulaId: string, d: string) =>
-    agendamentos.filter((g) => g.aula_id === aulaId && g.data === d).length;
+    agendamentosPorAulaData.get(`${aulaId}:${d}`)?.length ?? 0;
 
   const suspensaEm = (aulaId: string, d: string) =>
-    suspensoes.some((s) => s.aula_id === aulaId && s.data === d);
+    suspensoesPorAulaData.has(`${aulaId}:${d}`);
 
   const aulasDoDia = aulas
     .filter((a) => a.dia_semana === diaDaSemana(data))
@@ -128,7 +143,7 @@ export function Agenda({
   return (
     <div className="flex flex-col gap-4">
       {/* Segmented Control iOS Moderno */}
-      <div className="grid grid-cols-2 rounded-2xl border border-white/10 bg-zinc-900/90 p-1 backdrop-blur-md">
+      <div className="grid grid-cols-2 rounded-2xl border border-white/10 bg-zinc-900/90 p-1">
         <button
           type="button"
           onClick={() => setAba("dia")}
