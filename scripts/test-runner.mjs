@@ -45,7 +45,6 @@ if (fs.existsSync(".env.local")) {
 const supabaseUrl = envVars.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const anthropicKey = envVars.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
-const claudeModel = envVars.CLAUDE_MODEL || process.env.CLAUDE_MODEL;
 
 if (supabaseUrl && supabaseKey) {
   registrarSucesso("Credenciais do Supabase configuradas");
@@ -276,25 +275,20 @@ try {
 }
 
 // ==============================================================================
-// 5. TESTES DE HIGIENIZAÇÃO E COMUNICAÇÃO COM O CLAUDE
+// 5. TESTES DO MODELO E COMUNICAÇÃO COM O CLAUDE
 // ==============================================================================
-console.log("\n[5] Testando higienização do modelo e chamada direta à API Claude...");
+console.log("\n[5] Testando modelo configurado e chamada direta à API Claude...");
 
-function obterModeloClaudeSanitizado(rawModel) {
-  const raw = rawModel || "";
-  const limpo = raw.trim().replace(/[\r\n\t"']/g, "");
-  return limpo || "claude-haiku-4-5-20251001";
-}
+const modeloAlvo = "claude-opus-5-5";
 
 try {
-  // Teste com quebra de linha (que causou o erro 404 anterior)
-  const modeloComEnter = "claude-haiku-4-5-20251001\n";
-  const modeloComAspas = '"claude-haiku-4-5-20251001"\r';
-  assert.strictEqual(obterModeloClaudeSanitizado(modeloComEnter), "claude-haiku-4-5-20251001");
-  assert.strictEqual(obterModeloClaudeSanitizado(modeloComAspas), "claude-haiku-4-5-20251001");
-  registrarSucesso("Higienização de modelo remove \\n, \\r, aspas e espaços invisíveis");
+  const modeloFile = fs.readFileSync("./lib/agente/anthropic.ts", "utf8");
+  const executorFile = fs.readFileSync("./lib/agente/executor.ts", "utf8");
+  assert.match(modeloFile, /return "claude-opus-5-5"/);
+  assert.doesNotMatch(executorFile, /claude-(haiku|sonnet)/);
+  registrarSucesso("Copiloto fixado no Opus 5.5, sem fallback para outros modelos");
 } catch (err) {
-  registrarErro("Sanitização Modelo", err.message);
+  registrarErro("Modelo Claude", err.message);
 }
 
 // Teste real com a API da Anthropic
@@ -302,15 +296,15 @@ if (anthropicKey) {
   try {
     const limpoKey = anthropicKey.trim().replace(/[\r\n\t"']/g, "");
     const client = new Anthropic({ apiKey: limpoKey });
-    const modeloAlvo = obterModeloClaudeSanitizado(claudeModel);
 
     const res = await client.messages.create({
       model: modeloAlvo,
-      max_tokens: 15,
+      max_tokens: 256,
       messages: [{ role: "user", content: "Responda apenas: OK" }],
     });
 
-    const respostaTexto = res.content[0]?.text || "";
+    assert.strictEqual(res.model, modeloAlvo);
+    const respostaTexto = res.content.find((b) => b.type === "text")?.text || "";
     registrarSucesso(`Chamada real à API Anthropic bem-sucedida com modelo '${modeloAlvo}': "${respostaTexto.trim()}"`);
   } catch (err) {
     registrarErro("Anthropic API", `Erro na chamada real: ${err.message}`);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { processarMensagemCopiloto } from "@/lib/agente/executor";
-import { temChaveClaude } from "@/lib/agente/anthropic";
+import { obterModeloClaude, temChaveClaude } from "@/lib/agente/anthropic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,5 +69,6 @@ export async function GET() {
   return NextResponse.json({
     status: "online",
     temChave: temChaveClaude(),
+    modelo: obterModeloClaude(),
   });
 }

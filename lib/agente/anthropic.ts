@@ -1,13 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-/**
- * Retorna o identificador do modelo Claude higienizado contra quebras de linha,
- * espaços e caracteres invisíveis comuns em variáveis de ambiente da Vercel.
- */
+// Modelo fixo: uma CLAUDE_MODEL antiga na Vercel não deve reativar o Haiku.
 export function obterModeloClaude(): string {
-  const raw = process.env.CLAUDE_MODEL || "";
-  const limpo = raw.trim().replace(/[\r\n\t"']/g, "");
-  return limpo || "claude-haiku-4-5-20251001";
+  return "claude-opus-5-5";
 }
 
 export const MODELO_PADRAO = obterModeloClaude();

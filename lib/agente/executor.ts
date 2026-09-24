@@ -1409,45 +1409,17 @@ DIRETRIZES DE EXECUÇÃO:
   ];
 
   const acoesAcumuladas: AcaoExecutada[] = [];
-  let modeloEfetivo = obterModeloClaude();
+  const modeloEfetivo = obterModeloClaude();
 
   try {
     async function chamarClaude(msgs: Anthropic.MessageParam[]): Promise<Anthropic.Message> {
-      try {
-        return await anthropic.messages.create({
-          model: modeloEfetivo,
-          max_tokens: 1500,
-          system: systemPrompt,
-          tools: FERRAMENTAS_COPILOTO,
-          messages: msgs,
-        });
-      } catch (errPrimario: unknown) {
-        const msgErr = errPrimario instanceof Error ? errPrimario.message : String(errPrimario);
-        if (msgErr.includes("not_found_error") || msgErr.includes("404")) {
-          const fallbacks = [
-            "claude-haiku-4-5-20251001",
-            "claude-sonnet-4-5-20250929",
-            "claude-3-5-haiku-20241022",
-          ].filter((m) => m !== modeloEfetivo);
-
-          for (const fb of fallbacks) {
-            try {
-              const res = await anthropic.messages.create({
-                model: fb,
-                max_tokens: 1500,
-                system: systemPrompt,
-                tools: FERRAMENTAS_COPILOTO,
-                messages: msgs,
-              });
-              modeloEfetivo = fb;
-              return res;
-            } catch {
-              // Continua para o próximo fallback
-            }
-          }
-        }
-        throw errPrimario;
-      }
+      return anthropic.messages.create({
+        model: modeloEfetivo,
+        max_tokens: 4096,
+        system: systemPrompt,
+        tools: FERRAMENTAS_COPILOTO,
+        messages: msgs,
+      });
     }
 
     let respostaAtual = await chamarClaude(messages);
