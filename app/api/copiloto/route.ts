@@ -15,8 +15,24 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Lê os dados da requisição
-    const body = await req.json();
-    const { mensagem, historico } = body;
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { ok: false, resposta: "JSON inválido.", acoes: [] },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json(
+        { ok: false, resposta: "Dados da mensagem inválidos.", acoes: [] },
+        { status: 400 }
+      );
+    }
+
+    const { mensagem, historico } = body as { mensagem?: unknown; historico?: unknown };
 
     if (!mensagem || typeof mensagem !== "string" || !mensagem.trim()) {
       return NextResponse.json(
@@ -33,12 +49,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(resultado);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Erro interno no processamento do Copiloto:", err);
     return NextResponse.json(
       {
         ok: false,
         resposta: "Erro interno no processamento do Copiloto.",
-        erro: msg,
         acoes: [],
       },
       { status: 500 }

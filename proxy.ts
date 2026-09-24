@@ -6,6 +6,20 @@ import { isDono } from "@/lib/dono";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === "/login";
+  const isApiRequest = pathname.startsWith("/api/");
+
+  function negarAcesso() {
+    if (isApiRequest) {
+      return NextResponse.json(
+        { ok: false, resposta: "Sessão não autenticada. Faça login novamente.", acoes: [] },
+        { status: 401 }
+      );
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
 
   // Identifica requisições de prefetch do Next.js
   const isPrefetch =
@@ -22,11 +36,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Se não tem cookie de auth e tenta acessar rota protegida, redireciona para /login em 0ms
+  // Sem cookie, páginas vão ao login e APIs recebem JSON 401 sem consulta remota.
   if (!hasAuthCookie && !isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return negarAcesso();
   }
 
   // 2. Otimização para Prefetches do Next.js:
@@ -68,9 +80,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (user && !isDono(user.id)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return negarAcesso();
   }
 
   if (user && isLoginPage) {
@@ -78,9 +88,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!user && !isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return negarAcesso();
   }
 
   return response;

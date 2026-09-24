@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Send,
   Loader2,
@@ -72,6 +73,7 @@ function carregarHistoricoLocal(): MensagemItem[] {
 }
 
 export function CopilotoClient() {
+  const router = useRouter();
   const [mensagens, setMensagens] = useState<MensagemItem[]>(carregarHistoricoLocal);
   const [inputTexto, setInputTexto] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -146,6 +148,11 @@ export function CopilotoClient() {
           historico: historicoFormatado,
         }),
       });
+
+      if (res.status === 401) {
+        router.replace("/login");
+        return;
+      }
 
       const dados = await res.json();
 
