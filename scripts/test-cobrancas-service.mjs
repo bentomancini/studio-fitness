@@ -18,8 +18,8 @@ if ((!supabaseUrl || !supabaseKey) && fs.existsSync(".env.local")) {
 }
 
 if (!supabaseUrl || !supabaseKey) {
-  supabaseUrl = "https://qsblaxrwivhhwpgaoabv.supabase.co";
-  supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzYmxheHJ3aXZoaHdwZ2FvYWJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4NjY1NTgsImV4cCI6MjEwNTQ0MjU1OH0.N0X4jA1q71tmJB5spM6PWV5tU2YtTE20SX19JWqOk2Q";
+  console.error("Credenciais do Supabase ausentes. Copie .env.example para .env.local e preencha NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+  process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
