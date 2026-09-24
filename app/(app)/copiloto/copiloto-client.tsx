@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import {
   Send,
   Loader2,
-  Trash2,
   Calendar,
   CircleDollarSign,
   Users,
@@ -58,29 +57,27 @@ const SUGESTOES = [
 
 const STORAGE_KEY = "studio_copiloto_historico_v2";
 
+function carregarHistoricoLocal(): MensagemItem[] {
+  try {
+    const salvo =
+      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
+    if (salvo) {
+      const parsed = JSON.parse(salvo);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {
+    // Ignora erro de parse local
+  }
+  return [MENSAGEM_INICIAL];
+}
+
 export function CopilotoClient() {
-  const [mensagens, setMensagens] = useState<MensagemItem[]>([MENSAGEM_INICIAL]);
+  const [mensagens, setMensagens] = useState<MensagemItem[]>(carregarHistoricoLocal);
   const [inputTexto, setInputTexto] = useState("");
   const [carregando, setCarregando] = useState(false);
   const mensagensFimRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const idContadorRef = useRef(1);
-
-  // Carrega histórico do localStorage no primeiro render
-  useEffect(() => {
-    try {
-      const salvo = localStorage.getItem(STORAGE_KEY);
-      if (salvo) {
-        const parsed = JSON.parse(salvo);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setMensagens(parsed);
-          idContadorRef.current = parsed.length + 10;
-        }
-      }
-    } catch {
-      // Ignora erro de parse local
-    }
-  }, []);
+  const idContadorRef = useRef(mensagens.length + 10);
 
   // Salva histórico no localStorage a cada alteração
   useEffect(() => {

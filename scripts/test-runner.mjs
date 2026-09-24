@@ -21,11 +21,6 @@ function registrarErro(modulo, detalhe) {
   console.log(`  ❌ [FALHA] ${modulo}: ${detalhe}`);
 }
 
-function registrarAviso(modulo, detalhe) {
-  avisos.push({ modulo, detalhe });
-  console.log(`  ⚠️ [AVISO] ${modulo}: ${detalhe}`);
-}
-
 // ==============================================================================
 // 1. CARREGAR VARIÁVEIS DE AMBIENTE (.env.local)
 // ==============================================================================
@@ -222,7 +217,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function testarTabela(tabela, colunas) {
   try {
-    const { data, error } = await supabase.from(tabela).select(colunas.join(",")).limit(1);
+    const { error } = await supabase.from(tabela).select(colunas.join(",")).limit(1);
     if (error && error.code !== "PGRST116") {
       // Se der erro de coluna inexistente ou tabela inexistente
       if (error.code === "42703" || error.code === "42P01" || error.code === "PGRST205") {

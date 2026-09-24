@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Calendar,
   CalendarPlus,
@@ -22,9 +22,9 @@ export function BottomNav({ qtdCobrancasAlerta = 0 }: BottomNavProps) {
   const [pendingPath, setPendingPath] = useState<string | null>(null);
 
   // Limpa o estado pendente assim que a nova rota carrega
-  useEffect(() => {
+  if (pendingPath !== null && pendingPath === pathname) {
     setPendingPath(null);
-  }, [pathname]);
+  }
 
   const activePath = pendingPath && pendingPath !== pathname ? pendingPath : pathname;
 

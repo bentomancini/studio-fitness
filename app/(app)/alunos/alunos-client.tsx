@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { alternarStatus } from "./actions";
 import { BotaoExcluirAluno } from "./botao-excluir";
@@ -35,12 +35,15 @@ function extrairIniciais(nome: string) {
 
 export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
   const [listaAlunos, setListaAlunos] = useState<Aluno[]>(alunos);
+  const [alunosAnteriores, setAlunosAnteriores] = useState<Aluno[]>(alunos);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativo" | "inativo">("todos");
 
-  useEffect(() => {
+  // Sincroniza a lista se o servidor re-entrega dados atualizados
+  if (alunos !== alunosAnteriores) {
+    setAlunosAnteriores(alunos);
     setListaAlunos(alunos);
-  }, [alunos]);
+  }
 
   const handleAlternarStatusOtimista = (id: string, novoStatus: "ativo" | "inativo") => {
     setListaAlunos((prev) =>

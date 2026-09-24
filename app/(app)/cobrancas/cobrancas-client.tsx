@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -132,11 +132,13 @@ export function CobrancasClient({
   const [contatosLocais, setContatosLocais] = useState<Record<string, { qtd: number; em: string }>>({});
 
   const [painel, setPainel] = useState<PainelCobrancas>(painelInicial);
+  const [painelInicialAnterior, setPainelInicialAnterior] = useState(painelInicial);
 
   // Sincroniza se o servidor recarregar
-  useEffect(() => {
+  if (painelInicial !== painelInicialAnterior) {
+    setPainelInicialAnterior(painelInicial);
     setPainel(painelInicial);
-  }, [painelInicial]);
+  }
 
   const { totais, atrasadas, hoje: hojeLista, proximos, pagasMes } = painel;
 

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { obterClienteClaude, obterModeloClaude, MODELO_PADRAO } from "./anthropic";
+import { obterClienteClaude, obterModeloClaude } from "./anthropic";
 import { FERRAMENTAS_COPILOTO } from "./ferramentas";
 import {
   dataHoje,
