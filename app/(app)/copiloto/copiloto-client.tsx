@@ -56,41 +56,14 @@ const SUGESTOES = [
   },
 ];
 
-const STORAGE_KEY = "studio_copiloto_historico_v2";
-
-function carregarHistoricoLocal(): MensagemItem[] {
-  try {
-    const salvo =
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (salvo) {
-      const parsed = JSON.parse(salvo);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {
-    // Ignora erro de parse local
-  }
-  return [MENSAGEM_INICIAL];
-}
-
 export function CopilotoClient() {
   const router = useRouter();
-  const [mensagens, setMensagens] = useState<MensagemItem[]>(carregarHistoricoLocal);
+  const [mensagens, setMensagens] = useState<MensagemItem[]>([MENSAGEM_INICIAL]);
   const [inputTexto, setInputTexto] = useState("");
   const [carregando, setCarregando] = useState(false);
   const mensagensFimRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const idContadorRef = useRef(mensagens.length + 10);
-
-  // Salva histórico no localStorage a cada alteração
-  useEffect(() => {
-    try {
-      if (mensagens.length > 1) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(mensagens));
-      }
-    } catch {
-      // Ignora erro de quota
-    }
-  }, [mensagens]);
 
   // Rola para a mensagem mais recente
   useEffect(() => {
@@ -103,7 +76,6 @@ export function CopilotoClient() {
   }, []);
 
   function handleLimparConversa() {
-    localStorage.removeItem(STORAGE_KEY);
     idContadorRef.current += 1;
     setMensagens([
       {
@@ -135,10 +107,10 @@ export function CopilotoClient() {
 
     try {
       // Monta histórico recente para o Claude (apenas 4 últimas mensagens para latência mínima)
-      const historicoFormatado = mensagensAtualizadas.slice(-4).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const historicoFormatado = mensagens
+        .filter((m) => !m.id.startsWith("boas-vindas"))
+        .slice(-4)
+        .map((m) => ({ role: m.role, content: m.content }));
 
       const res = await fetch("/api/copiloto", {
         method: "POST",
@@ -340,6 +312,7 @@ export function CopilotoClient() {
           <input
             ref={inputRef}
             type="text"
+            maxLength={4000}
             value={inputTexto}
             onChange={(e) => setInputTexto(e.target.value)}
             placeholder="Peça uma ação ou faça uma pergunta..."

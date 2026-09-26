@@ -1,3 +1,5 @@
+import "server-only";
+
 const DONO_USER_ID = process.env.DONO_USER_ID;
 
 // Único usuário que pode usar o sistema: o dono do estúdio.

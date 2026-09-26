@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { isDono } from "@/lib/dono";
 import { redirect } from "next/navigation";
 
 export type LoginState = { error?: string };
@@ -18,12 +19,13 @@ export async function login(
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
-  if (error) {
+  if (error || !data.user || !isDono(data.user.id)) {
+    if (data?.user) await supabase.auth.signOut();
     return { error: "E-mail ou senha incorretos." };
   }
 

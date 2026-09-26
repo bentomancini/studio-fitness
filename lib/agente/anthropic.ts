@@ -1,3 +1,4 @@
+import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
 // Modelo fixo: uma CLAUDE_MODEL antiga na Vercel não deve reativar o Haiku.

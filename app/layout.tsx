@@ -43,6 +43,7 @@ export const viewport: Viewport = {
 };
 
 import { ToastContainer } from "@/components/toast";
+import { LimparHistoricoCopiloto } from "@/components/limpar-historico-copiloto";
 
 export default function RootLayout({
   children,
@@ -56,6 +57,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 selection:bg-emerald-500/30 selection:text-emerald-300">
+        <LimparHistoricoCopiloto />
         <ToastContainer />
         {children}
       </body>

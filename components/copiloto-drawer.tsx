@@ -350,6 +350,7 @@ export function CopilotoDrawer() {
             <input
               ref={inputRef}
               type="text"
+              maxLength={4000}
               value={inputTexto}
               onChange={(e) => setInputTexto(e.target.value)}
               placeholder="Peça uma ação ou faça uma pergunta..."
