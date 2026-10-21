@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { AlunoResumoAtivo } from "@/lib/services/alunos";
 import {
   PainelCobrancas,
   CobrancaComAluno,
@@ -20,6 +21,7 @@ import {
   acaoRegistrarContatoWhatsApp,
   acaoCriarCobrancaAvulsa,
   acaoCancelarCobranca,
+  acaoListarAlunosAtivos,
 } from "./actions";
 import { showToast } from "@/components/toast";
 import { dataHoje } from "@/lib/constantes";
@@ -45,15 +47,6 @@ import {
 type CobrancasClientProps = {
   painelInicial: PainelCobrancas;
   config: ConfigCobranca;
-  alunosAtivos: Array<{
-    id: string;
-    nome: string;
-    telefone?: string | null;
-    valor_mensalidade?: number | null;
-    dia_vencimento?: number | null;
-    plano_padrao_id?: string | null;
-    periodicidade?: "mensal" | "trimestral";
-  }>;
 };
 
 function calcularDiasDiferenca(dataVencimentoIso: string, hojeIso: string): number {
@@ -79,7 +72,6 @@ function formatarUltimoContato(ultimoContatoIso: string | null, qtd: number): st
 export function CobrancasClient({
   painelInicial,
   config,
-  alunosAtivos,
 }: CobrancasClientProps) {
   const router = useRouter();
   const hoje = dataHoje();
@@ -96,17 +88,40 @@ export function CobrancasClient({
   const [processandoPagamento, setProcessandoPagamento] = useState(false);
 
   const [modalAvulsaAberto, setModalAvulsaAberto] = useState(false);
+  const [alunosAtivos, setAlunosAtivos] = useState<AlunoResumoAtivo[] | null>(null);
+  const [carregandoAlunos, setCarregandoAlunos] = useState(false);
+  const [erroAlunos, setErroAlunos] = useState(false);
   const [processandoAvulsa, setProcessandoAvulsa] = useState(false);
   const [alunoAvulsaId, setAlunoAvulsaId] = useState("");
   const [tituloAvulsa, setTituloAvulsa] = useState("Cobrança avulsa");
   const [valorAvulsa, setValorAvulsa] = useState("");
   const [vencimentoAvulsa, setVencimentoAvulsa] = useState(hoje);
 
-  const alunoAvulsaSelecionado = alunosAtivos.find((a) => a.id === alunoAvulsaId);
+  const alunoAvulsaSelecionado = alunosAtivos?.find((a) => a.id === alunoAvulsaId);
+
+  async function carregarAlunosAvulsa() {
+    if (carregandoAlunos) return;
+    setAlunosAtivos(null);
+    setCarregandoAlunos(true);
+    setErroAlunos(false);
+    try {
+      setAlunosAtivos(await acaoListarAlunosAtivos());
+    } catch {
+      setErroAlunos(true);
+    } finally {
+      setCarregandoAlunos(false);
+    }
+  }
+
+  function abrirModalAvulsa() {
+    setModalAvulsaAberto(true);
+    setAlunoAvulsaId("");
+    void carregarAlunosAvulsa();
+  }
 
   const handleSelecionarAlunoAvulsa = (id: string) => {
     setAlunoAvulsaId(id);
-    const aluno = alunosAtivos.find((a) => a.id === id);
+    const aluno = alunosAtivos?.find((a) => a.id === id);
     if (aluno) {
       if (aluno.valor_mensalidade) {
         setValorAvulsa(aluno.valor_mensalidade.toFixed(2));
@@ -412,7 +427,7 @@ export function CobrancasClient({
     return (
       <div
         key={cobranca.id}
-        className={`group relative flex flex-col gap-3 rounded-2xl border p-4 transition-all duration-200 ${
+        className={`group list-card-tall relative flex flex-col gap-3 rounded-2xl border p-4 transition-all duration-200 ${
           tipo === "atrasada"
             ? "border-rose-500/25 bg-gradient-to-b from-rose-950/20 to-zinc-900/90 shadow-lg shadow-rose-950/20"
             : tipo === "hoje"
@@ -425,6 +440,7 @@ export function CobrancasClient({
           <div className="flex flex-col gap-0.5">
             <Link
               href={`/alunos/${cobranca.aluno.id}`}
+              prefetch={false}
               className="text-sm font-bold text-white hover:text-emerald-400 transition-colors"
             >
               {cobranca.aluno.nome}
@@ -538,7 +554,7 @@ export function CobrancasClient({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setModalAvulsaAberto(true)}
+            onClick={abrirModalAvulsa}
             className="btn-press flex h-9 items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 px-3 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-500/20 hover:brightness-110"
           >
             <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
@@ -818,7 +834,7 @@ export function CobrancasClient({
                 pagasFiltradas.map((c) => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-zinc-900/60 p-3.5 text-xs transition-all"
+                    className="list-card-compact flex items-center justify-between rounded-2xl border border-emerald-500/20 bg-zinc-900/60 p-3.5 text-xs transition-all"
                   >
                     <div className="flex flex-col gap-0.5">
                       <span className="font-bold text-white">{c.aluno.nome}</span>
@@ -978,17 +994,32 @@ export function CobrancasClient({
                 <select
                   name="aluno_id"
                   required
+                  disabled={alunosAtivos === null}
                   value={alunoAvulsaId}
                   onChange={(e) => handleSelecionarAlunoAvulsa(e.target.value)}
                   className="h-10 rounded-xl border border-white/10 bg-zinc-900 px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                 >
-                  <option value="">Selecione o aluno...</option>
-                  {alunosAtivos.map((a) => (
+                  <option value="">
+                    {carregandoAlunos
+                      ? "Carregando alunos..."
+                      : erroAlunos
+                      ? "Erro ao carregar alunos"
+                      : alunosAtivos?.length === 0
+                      ? "Nenhum aluno ativo"
+                      : "Selecione o aluno..."}
+                  </option>
+                  {(alunosAtivos ?? []).map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.nome} {a.valor_mensalidade ? `(R$ ${a.valor_mensalidade.toFixed(2).replace(".", ",")})` : ""}
                     </option>
                   ))}
                 </select>
+
+                {erroAlunos && (
+                  <button type="button" onClick={() => void carregarAlunosAvulsa()} className="text-left text-xs text-amber-300 underline">
+                    Tentar carregar alunos novamente
+                  </button>
+                )}
 
                 {alunoAvulsaSelecionado && alunoAvulsaSelecionado.valor_mensalidade && (
                   <div className="mt-1 rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2 text-[11px] text-emerald-300 animate-in fade-in duration-150">
@@ -1067,7 +1098,7 @@ export function CobrancasClient({
                 </button>
                 <button
                   type="submit"
-                  disabled={processandoAvulsa}
+                  disabled={processandoAvulsa || !alunosAtivos?.length}
                   className="btn-press flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 py-2.5 text-xs font-bold text-zinc-950 shadow-md shadow-emerald-500/20 hover:brightness-110"
                 >
                   {processandoAvulsa ? (

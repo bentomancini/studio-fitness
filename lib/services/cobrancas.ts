@@ -181,6 +181,9 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
   const hoje = dataHoje();
   const [hojeAno, hojeMes] = hoje.split("-").map(Number);
   const mesAtualRef = `${hojeAno}-${String(hojeMes).padStart(2, "0")}`;
+  const inicioDosUltimosTresMeses = new Date(Date.UTC(hojeAno, hojeMes - 3, 1))
+    .toISOString()
+    .slice(0, 10);
 
   // Busca alunos ativos que possuem acordo financeiro configurado
   let { data: alunos } = await supabase
@@ -203,13 +206,15 @@ export async function sincronizarMensalidadesAlunos(): Promise<void> {
 
   if (!alunos || alunos.length === 0) return;
 
-  // Busca cobranças recentes desses alunos (incluindo canceladas para respeitar a decisão do dono)
+  // Trimestrais precisam de pendências antigas e dos três meses mais recentes;
+  // mensais precisam do ciclo atual, inclusive cancelamentos. Evita ler todo o histórico.
   const alunoIds = alunos.map((a) => a.id);
   const { data: cobrancasExistentes } = await supabase
     .from("cobrancas")
     .select("aluno_id, mes_referencia, data_vencimento, status, tipo")
     .in("aluno_id", alunoIds)
-    .eq("tipo", "recorrente");
+    .eq("tipo", "recorrente")
+    .or(`status.eq.pendente,mes_referencia.eq.${mesAtualRef},data_vencimento.gte.${inicioDosUltimosTresMeses}`);
 
   // Mapeia cobranças por aluno
   const cobrancasPorAluno = new Map<string, typeof cobrancasExistentes>();
@@ -293,7 +298,8 @@ export async function listarPainelCobrancas(): Promise<PainelCobrancas> {
   // Garante que novos alunos com mensalidade já tenham cobrança do mês
   await sincronizarMensalidadesAlunos();
 
-  // Busca cobranças ativas e pagas recentes
+  // Pendentes permanecem visíveis mesmo antigas; pagas só importam neste mês.
+  // O fallback por vencimento preserva registros antigos sem data_pagamento.
   const { data: rawCobrancas, error } = await supabase
     .from("cobrancas")
     .select(
@@ -324,6 +330,7 @@ export async function listarPainelCobrancas(): Promise<PainelCobrancas> {
     `
     )
     .neq("status", "cancelado")
+    .or(`status.eq.pendente,data_pagamento.gte.${mesAtualRef}-01,and(data_pagamento.is.null,data_vencimento.gte.${mesAtualRef}-01)`)
     .order("data_vencimento", { ascending: true });
 
   if (error) {

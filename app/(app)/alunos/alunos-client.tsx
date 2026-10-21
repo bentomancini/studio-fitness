@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import { alternarStatus } from "./actions";
 import { BotaoExcluirAluno } from "./botao-excluir";
@@ -27,6 +27,8 @@ type Aluno = {
   tem_dores_cronicas?: boolean | null;
 };
 
+const ALUNOS_POR_LOTE = 30;
+
 function extrairIniciais(nome: string) {
   const partes = nome.trim().split(" ");
   if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
@@ -38,6 +40,8 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
   const [alunosAnteriores, setAlunosAnteriores] = useState<Aluno[]>(alunos);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<"todos" | "ativo" | "inativo">("todos");
+  const [limiteVisivel, setLimiteVisivel] = useState(ALUNOS_POR_LOTE);
+  const buscaAdiada = useDeferredValue(busca);
 
   // Sincroniza a lista se o servidor re-entrega dados atualizados
   if (alunos !== alunosAnteriores) {
@@ -55,16 +59,21 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
     setListaAlunos((prev) => prev.filter((a) => a.id !== id));
   };
 
-  const filtrados = listaAlunos.filter((aluno) => {
-    const combinaBusca =
-      aluno.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      (aluno.telefone && aluno.telefone.includes(busca));
-    const combinaStatus =
-      filtroStatus === "todos" ? true : aluno.status === filtroStatus;
-    return combinaBusca && combinaStatus;
-  });
+  const filtrados = useMemo(() => {
+    const termo = buscaAdiada.toLowerCase();
+    return listaAlunos.filter((aluno) =>
+      (filtroStatus === "todos" || aluno.status === filtroStatus) &&
+      (aluno.nome.toLowerCase().includes(termo) || aluno.telefone?.includes(buscaAdiada))
+    );
+  }, [listaAlunos, buscaAdiada, filtroStatus]);
 
   const totalAtivos = listaAlunos.filter((a) => a.status === "ativo").length;
+  const visiveis = filtrados.slice(0, limiteVisivel);
+
+  function selecionarFiltro(filtro: "todos" | "ativo" | "inativo") {
+    setFiltroStatus(filtro);
+    setLimiteVisivel(ALUNOS_POR_LOTE);
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -93,7 +102,10 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
             <input
               type="text"
               value={busca}
-              onChange={(e) => setBusca(e.target.value)}
+              onChange={(e) => {
+                setBusca(e.target.value);
+                setLimiteVisivel(ALUNOS_POR_LOTE);
+              }}
               placeholder="Buscar aluno por nome ou telefone..."
               className="h-11 w-full rounded-2xl border border-white/10 bg-zinc-900/80 pl-10 pr-4 text-xs text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 transition-colors"
             />
@@ -102,7 +114,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
           {/* Filtro rápido por status em grid de 3 colunas */}
           <div className="grid grid-cols-3 gap-1.5">
             <button
-              onClick={() => setFiltroStatus("todos")}
+              onClick={() => selecionarFiltro("todos")}
               className={`flex h-8 items-center justify-center rounded-xl text-center text-[11px] font-semibold transition-all ${
                 filtroStatus === "todos"
                   ? "bg-zinc-700 text-white shadow-sm"
@@ -112,7 +124,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
               Todos ({alunos.length})
             </button>
             <button
-              onClick={() => setFiltroStatus("ativo")}
+              onClick={() => selecionarFiltro("ativo")}
               className={`flex h-8 items-center justify-center rounded-xl text-center text-[11px] font-semibold transition-all ${
                 filtroStatus === "ativo"
                   ? "bg-emerald-500/20 border border-emerald-500/30 text-emerald-300"
@@ -122,7 +134,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
               Ativos ({totalAtivos})
             </button>
             <button
-              onClick={() => setFiltroStatus("inativo")}
+              onClick={() => selecionarFiltro("inativo")}
               className={`flex h-8 items-center justify-center rounded-xl text-center text-[11px] font-semibold transition-all ${
                 filtroStatus === "inativo"
                   ? "bg-zinc-800 text-zinc-300 border border-white/10"
@@ -148,11 +160,11 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
         </div>
       ) : filtrados.length === 0 ? (
         <div className="glass-panel rounded-3xl p-6 text-center text-xs text-zinc-500">
-          Nenhum aluno corresponde à busca &quot;{busca}&quot;.
+          Nenhum aluno corresponde à busca &quot;{buscaAdiada}&quot;.
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
-          {filtrados.map((aluno) => {
+          {visiveis.map((aluno) => {
             const isAtivo = aluno.status === "ativo";
             const telLimpo = aluno.telefone ? aluno.telefone.replace(/\D/g, "") : "";
             const linkWhats =
@@ -163,7 +175,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
             return (
               <li
                 key={aluno.id}
-                className={`glass-panel interactive-card relative overflow-hidden rounded-3xl p-4 border transition-all ${
+                className={`glass-panel interactive-card list-card relative overflow-hidden rounded-3xl p-4 border transition-all ${
                   isAtivo
                     ? "border-white/10 hover:border-white/20"
                     : "border-white/5 bg-zinc-950/40 opacity-70"
@@ -265,6 +277,7 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
 
                     <Link
                       href={`/alunos/${aluno.id}/editar`}
+                      prefetch={false}
                       className="btn-press flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-zinc-900/80 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white shrink-0"
                       title="Editar ficha"
                       aria-label="Editar ficha"
@@ -288,6 +301,17 @@ export function AlunosClient({ alunos }: { alunos: Aluno[] }) {
               </li>
             );
           })}
+          {filtrados.length > limiteVisivel && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setLimiteVisivel((atual) => atual + ALUNOS_POR_LOTE)}
+                className="btn-press w-full rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-xs font-semibold text-emerald-300 hover:border-emerald-500/30"
+              >
+                Mostrar mais alunos ({filtrados.length - limiteVisivel} restantes)
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </div>

@@ -97,6 +97,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   transform: scale(0.985) translateZ(0);
 }
 
+/* Pula layout/paint dos cartões fora da tela em listas longas (Safari/iPhone e PC). */
+.list-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 140px;
+}
+
+.list-card-tall {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 185px;
+}
+
+.list-card-compact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 64px;
+}
+
 /* Custom scrollbar discreta */
 ::-webkit-scrollbar {
   width: 5px;

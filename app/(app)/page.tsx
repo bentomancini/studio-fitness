@@ -1,10 +1,10 @@
-import { carregarAgenda } from "@/lib/services/agenda";
+import { carregarAgendaBasica } from "@/lib/services/agenda";
 import { Agenda } from "./agenda/agenda-client";
 
 export const metadata = { title: "Agenda" };
 
 export default async function AppHome() {
-  const { aulas, alunos, agendamentos, suspensoes } = await carregarAgenda();
+  const { aulas, alunos, agendamentos, suspensoes } = await carregarAgendaBasica();
 
   return (
     <div className="flex flex-col gap-5">

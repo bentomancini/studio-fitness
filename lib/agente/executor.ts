@@ -8,7 +8,7 @@ import {
   formatarData,
   formatoHorario,
 } from "@/lib/constantes";
-import { carregarAgenda, alternarSuspensao } from "@/lib/services/agenda";
+import { carregarAgendaBasica, alternarSuspensao } from "@/lib/services/agenda";
 import { agendarAula, cancelarAgendamento } from "@/lib/services/agendamentos";
 import {
   buscarAluno,
@@ -647,7 +647,7 @@ export async function executarFerramenta(
         const dow = diaDaSemana(dataAlvo);
         const nomeDia = DIAS_SEMANA[dow];
 
-        const dadosAgenda = await carregarAgenda();
+        const dadosAgenda = await carregarAgendaBasica();
         const aulasDoDia = dadosAgenda.aulas.filter((a) => a.dia_semana === dow);
 
         const grade = aulasDoDia.map((aula) => {
@@ -1292,7 +1292,7 @@ export async function executarFerramenta(
 
         const [alunos, agenda, painel] = await Promise.all([
           listarAlunos(),
-          carregarAgenda(),
+          carregarAgendaBasica(),
           listarPainelCobrancas(),
         ]);
 

@@ -9,6 +9,11 @@ import {
   salvarConfiguracoesCobranca,
   FormaPagamento,
 } from "@/lib/services/cobrancas";
+import { listarAlunosAtivos } from "@/lib/services/alunos";
+
+export async function acaoListarAlunosAtivos() {
+  return listarAlunosAtivos();
+}
 
 export async function acaoMarcarComoPago(dados: {
   cobrancaId: string;

@@ -131,6 +131,51 @@ export async function carregarAgenda(): Promise<DadosAgenda> {
   };
 }
 
+// A tela da agenda e as consultas do Copiloto não exibem dados de planos.
+// Evita duas consultas extras (planos/compras) e envia menos dados ao navegador.
+export async function carregarAgendaBasica(): Promise<DadosAgenda> {
+  const supabase = await exigeDono();
+  const limitePassado = subtrairDias(dataHoje(), 45);
+
+  const [
+    { data: aulas },
+    { data: alunos },
+    { data: agendamentos },
+    { data: suspensoes },
+  ] = await Promise.all([
+    supabase
+      .from("aulas")
+      .select("id, tipo_aula, dia_semana, horario, limite_vagas")
+      .eq("ativo", true),
+    supabase
+      .from("alunos")
+      .select("id, nome, telefone")
+      .eq("status", "ativo"),
+    supabase
+      .from("agendamentos")
+      .select("aula_id, aluno_id, data")
+      .gte("data", limitePassado),
+    supabase
+      .from("aulas_suspensas")
+      .select("aula_id, data")
+      .gte("data", limitePassado),
+  ]);
+
+  return {
+    aulas: aulas ?? [],
+    alunos: alunos ?? [],
+    agendamentos: (agendamentos ?? []).map((g) => ({
+      aula_id: g.aula_id,
+      aluno_id: g.aluno_id,
+      data: textoData(g.data),
+    })),
+    suspensoes: (suspensoes ?? []).map((s) => ({
+      aula_id: s.aula_id,
+      data: textoData(s.data),
+    })),
+  };
+}
+
 function apenasData(valor: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(valor) ? valor : "";
 }
