@@ -10,7 +10,7 @@ export default async function AppHome() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-white">
-          Agenda do Estúdio
+          Agenda do Studio
         </h1>
         <p className="text-xs text-zinc-400">
           Horários, ocupação de vagas e alunos confirmados

@@ -523,7 +523,7 @@ function AcaoAgendar({
           {pending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Confirmando vaga com o estúdio...</span>
+              <span>Confirmando vaga com o studio...</span>
             </>
           ) : (
             <>

@@ -301,7 +301,7 @@ export async function executarFerramenta(
           acao: {
             tipo: "aluno_cadastro",
             titulo: "Aluno Cadastrado com Sucesso",
-            detalhes: `${nome} foi registrado no estúdio (Mensalidade: R$ ${dados.valor_mensalidade || 0}, Vencimento dia ${dados.dia_vencimento || "-"}).`,
+            detalhes: `${nome} foi registrado no studio (Mensalidade: R$ ${dados.valor_mensalidade || 0}, Vencimento dia ${dados.dia_vencimento || "-"}).`,
             sucesso: true,
           },
         };
@@ -464,7 +464,7 @@ export async function executarFerramenta(
           acao: {
             tipo: "aluno_exclusao",
             titulo: "Aluno Removido",
-            detalhes: `${nomeAluno} foi excluído do sistema do estúdio.`,
+            detalhes: `${nomeAluno} foi excluído do sistema do studio.`,
             sucesso: true,
           },
         };
@@ -632,7 +632,7 @@ export async function executarFerramenta(
           acao: {
             tipo: "aula_exclusao",
             titulo: "Aula Excluída da Grade",
-            detalhes: "O horário foi removido da grade semanal do estúdio.",
+            detalhes: "O horário foi removido da grade semanal do studio.",
             sucesso: true,
           },
         };
@@ -1277,16 +1277,16 @@ export async function executarFerramenta(
           acao: {
             tipo: "configuracao",
             titulo: "Configurações de Cobrança Atualizadas",
-            detalhes: `Chave PIX e parâmetros do estúdio salvos com sucesso.`,
+            detalhes: `Chave PIX e parâmetros do studio salvos com sucesso.`,
             sucesso: true,
           },
         };
       }
 
       // ======================================================================
-      // 5) VISÃO GERAL 360° DO ESTÚDIO
+      // 5) VISÃO GERAL 360° DO STUDIO
       // ======================================================================
-      case "obter_visao_geral_estudio": {
+      case "obter_visao_geral_studio": {
         const hojeStr = dataHoje();
         const dow = diaDaSemana(hojeStr);
 
@@ -1355,7 +1355,7 @@ export async function executarFerramenta(
 }
 
 // ============================================================================
-// LOOP PRINCIPAL DO AGENTE CLAUDE COM AUTORIDADE TOTAL NO ESTÚDIO
+// LOOP PRINCIPAL DO AGENTE CLAUDE COM AUTORIDADE TOTAL NO STUDIO
 // ============================================================================
 export async function processarMensagemCopiloto(dados: {
   mensagem: string;
@@ -1377,8 +1377,8 @@ export async function processarMensagemCopiloto(dados: {
   const dow = diaDaSemana(hoje);
   const nomeDia = DIAS_SEMANA[dow];
 
-  const systemPrompt = `Você é o Copiloto e Assistente Executivo com AUTORIDADE TOTAL sobre o sistema do "Studio Brenno Mancini", um estúdio fitness personalizado.
-Você opera o estúdio diretamente a pedido do proprietário (Brenno).
+  const systemPrompt = `Você é o Copiloto e Assistente Executivo com AUTORIDADE TOTAL sobre o sistema do "Studio Brenno Mancini", um studio fitness personalizado.
+Você opera o studio diretamente a pedido do proprietário (Brenno).
 Data de referência atual: ${hoje} (${nomeDia}, horário de Brasília).
 
 AUTORIDADE E ACESSO TOTAL:
@@ -1387,8 +1387,8 @@ Você tem acesso completo para LER e MODIFICAR TUDO na aplicação:
 2. AULAS & GRADE: Criar novos horários na grade semanal, alterar horários/vagas/modalidades, ativar/desativar horários e excluir aulas da grade.
 3. AGENDA & FREQUÊNCIA: Agendar alunos, cancelar presenças, suspender aulas em datas específicas (feriados, recesso), reativar aulas suspensas e transferir alunos entre horários.
 4. COBRANÇAS & FINANCEIRO: Consultar cobranças e inadimplentes, dar baixa em pagamentos (PIX, dinheiro, cartão), estornar baixas erradas, criar cobranças avulsas (matrícula, avaliação), atualizar valores/vencimentos e cancelar cobranças.
-5. CONFIGURAÇÕES: Consultar e alterar chave PIX, nome do estúdio e modelos de mensagem de WhatsApp.
-6. VISÃO GERAL: Fornecer panorama executivo completo 360° do estúdio em tempo real.
+5. CONFIGURAÇÕES: Consultar e alterar chave PIX, nome do studio e modelos de mensagem de WhatsApp.
+6. VISÃO GERAL: Fornecer panorama executivo completo 360° do studio em tempo real.
 
 DIRETRIZES DE EXECUÇÃO:
 1. NUNCA peça para o usuário ir fazer a alteração manualmente na tela se você puder executar a ação com suas ferramentas. EXECUTE A AÇÃO DIRETAMENTE.

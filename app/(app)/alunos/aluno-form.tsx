@@ -417,11 +417,11 @@ export function AlunoForm({
           />
         </label>
 
-        {/* Status no Estúdio */}
+        {/* Status no Studio */}
         <label className="flex flex-col gap-1.5">
           <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-            Status no Estúdio
+            Status no Studio
           </span>
           <select
             name="status"

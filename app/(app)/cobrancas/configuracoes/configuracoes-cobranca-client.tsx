@@ -372,7 +372,7 @@ export function ConfiguracoesCobrancaClient({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-zinc-300">
-                Nome do Estúdio
+                Nome do Studio
               </label>
               <input
                 type="text"
@@ -449,7 +449,7 @@ export function ConfiguracoesCobrancaClient({
                   { tag: "{valor}", label: "Valor R$" },
                   { tag: "{vencimento}", label: "Vencimento" },
                   { tag: "{chave_pix}", label: "Chave Pix" },
-                  { tag: "{studio_nome}", label: "Nome do Estúdio" },
+                  { tag: "{studio_nome}", label: "Nome do Studio" },
                 ].map((v) => (
                   <button
                     key={v.tag}

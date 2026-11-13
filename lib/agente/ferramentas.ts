@@ -7,7 +7,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "buscar_alunos",
     description:
-      "Busca alunos cadastrados no estúdio por nome ou lista todos os alunos. Retorna nome, telefone, status (ativo/inativo), dores crônicas, valor de mensalidade e dia de vencimento.",
+      "Busca alunos cadastrados no studio por nome ou lista todos os alunos. Retorna nome, telefone, status (ativo/inativo), dores crônicas, valor de mensalidade e dia de vencimento.",
     input_schema: {
       type: "object",
       properties: {
@@ -45,7 +45,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "cadastrar_aluno",
     description:
-      "Cadastra um novo aluno no estúdio com todos os dados pessoais, de saúde e financeiros. Cria a ficha completa e sincroniza a mensalidade.",
+      "Cadastra um novo aluno no studio com todos os dados pessoais, de saúde e financeiros. Cria a ficha completa e sincroniza a mensalidade.",
     input_schema: {
       type: "object",
       properties: {
@@ -182,7 +182,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "alternar_status_aluno",
     description:
-      "Ativa ou inativa o cadastro de um aluno no estúdio.",
+      "Ativa ou inativa o cadastro de um aluno no studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -205,7 +205,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "excluir_aluno",
     description:
-      "Remove definitivamente um aluno do sistema do estúdio.",
+      "Remove definitivamente um aluno do sistema do studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -227,7 +227,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "listar_grade_aulas",
     description:
-      "Lista todos os horários fixos cadastrados na grade semanal do estúdio, com dia da semana, horário, modalidade, limite de vagas e se está ativo.",
+      "Lista todos os horários fixos cadastrados na grade semanal do studio, com dia da semana, horário, modalidade, limite de vagas e se está ativo.",
     input_schema: {
       type: "object",
       properties: {
@@ -245,7 +245,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "criar_aula",
     description:
-      "Cria um novo horário fixo de aula na grade semanal do estúdio.",
+      "Cria um novo horário fixo de aula na grade semanal do studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -303,7 +303,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "alternar_aula_ativa",
     description:
-      "Ativa ou desativa um horário na grade de aulas do estúdio.",
+      "Ativa ou desativa um horário na grade de aulas do studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -322,7 +322,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "excluir_aula",
     description:
-      "Exclui permanentemente um horário da grade de aulas do estúdio.",
+      "Exclui permanentemente um horário da grade de aulas do studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -498,7 +498,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "consultar_cobrancas",
     description:
-      "Consulta as cobranças e mensalidades do estúdio. Permite filtrar por: 'atrasadas', 'hoje', 'proximas' (próximos 7 dias), 'pagas' ou 'todas'.",
+      "Consulta as cobranças e mensalidades do studio. Permite filtrar por: 'atrasadas', 'hoje', 'proximas' (próximos 7 dias), 'pagas' ou 'todas'.",
     input_schema: {
       type: "object",
       properties: {
@@ -521,7 +521,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "resumo_financeiro",
     description:
-      "Retorna o resumo financeiro consolidado do estúdio: total faturado/recebido no mês, total em atraso (inadimplência), valor a vencer e contagem de mensalidades.",
+      "Retorna o resumo financeiro consolidado do studio: total faturado/recebido no mês, total em atraso (inadimplência), valor a vencer e contagem de mensalidades.",
     input_schema: {
       type: "object",
       properties: {},
@@ -644,7 +644,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "cancelar_cobranca",
     description:
-      "Cancela uma cobrança no estúdio.",
+      "Cancela uma cobrança no studio.",
     input_schema: {
       type: "object",
       properties: {
@@ -662,7 +662,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "excluir_cobranca",
     description:
-      "Exclui ou cancela uma cobrança de um aluno no estúdio, removendo-a do painel e impedindo que seja recriada.",
+      "Exclui ou cancela uma cobrança de um aluno no studio, removendo-a do painel e impedindo que seja recriada.",
     input_schema: {
       type: "object",
       properties: {
@@ -680,7 +680,7 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "obter_configuracoes_cobranca",
     description:
-      "Consulta as configurações financeiras do estúdio: chave PIX cadastrada, nome do estúdio e modelos de mensagens de WhatsApp.",
+      "Consulta as configurações financeiras do studio: chave PIX cadastrada, nome do studio e modelos de mensagens de WhatsApp.",
     input_schema: {
       type: "object",
       properties: {},
@@ -689,17 +689,17 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   {
     name: "atualizar_configuracoes_cobranca",
     description:
-      "Atualiza a chave PIX, nome do estúdio ou modelos de mensagens de cobrança do WhatsApp.",
+      "Atualiza a chave PIX, nome do studio ou modelos de mensagens de cobrança do WhatsApp.",
     input_schema: {
       type: "object",
       properties: {
         chave_pix: {
           type: "string",
-          description: "Nova chave PIX do estúdio.",
+          description: "Nova chave PIX do studio.",
         },
         studio_nome: {
           type: "string",
-          description: "Novo nome de exibição do estúdio.",
+          description: "Novo nome de exibição do studio.",
         },
         msg_antecipada: {
           type: "string",
@@ -718,12 +718,12 @@ export const FERRAMENTAS_COPILOTO: Tool[] = [
   },
 
   // ==========================================================================
-  // 5) VISÃO GERAL 360° DO ESTÚDIO
+  // 5) VISÃO GERAL 360° DO STUDIO
   // ==========================================================================
   {
-    name: "obter_visao_geral_estudio",
+    name: "obter_visao_geral_studio",
     description:
-      "Retorna um panorama 360° do estúdio em tempo real: total de alunos ativos, ocupação das aulas hoje, faturamento do mês, cobranças atrasadas e alertas operacionais.",
+      "Retorna um panorama 360° do studio em tempo real: total de alunos ativos, ocupação das aulas hoje, faturamento do mês, cobranças atrasadas e alertas operacionais.",
     input_schema: {
       type: "object",
       properties: {},

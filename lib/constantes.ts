@@ -15,7 +15,7 @@ export function formatoHorario(horario: string) {
 const FUSO = "America/Sao_Paulo";
 
 export function dataHoje() {
-  // Sempre usa o fuso do estúdio (Brasília), não o do servidor.
+  // Sempre usa o fuso do studio (Brasília), não o do servidor.
   const hoje = new Intl.DateTimeFormat("en-CA", {
     timeZone: FUSO,
     year: "numeric",

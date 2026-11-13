@@ -31,7 +31,7 @@ export default function LoginPage() {
               Studio Brenno Mancini
             </h1>
             <p className="mt-1 text-sm text-zinc-400">
-              Gerenciamento exclusivo do estúdio
+              Gerenciamento exclusivo do studio
             </p>
           </div>
 

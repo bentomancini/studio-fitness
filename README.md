@@ -1,7 +1,7 @@
 # Studio Brenno Mancini
 
 Aplicativo de agenda e gerenciamento do Studio Brenno Mancini, feito para ser
-usado no iPhone (Safari mobile) pelo administrador do estúdio.
+usado no iPhone (Safari mobile) pelo administrador do studio.
 
 **Stack:** Next.js (App Router) + TypeScript + Tailwind CSS + Supabase (banco e
 login) + PWA.

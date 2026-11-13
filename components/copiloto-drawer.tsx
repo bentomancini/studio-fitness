@@ -311,7 +311,7 @@ export function CopilotoDrawer() {
                   <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce [animation-delay:-0.15s]"></span>
                   <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-bounce"></span>
                 </div>
-                <span className="text-zinc-400 font-medium">Claude operando o estúdio...</span>
+                <span className="text-zinc-400 font-medium">Claude operando o studio...</span>
               </div>
             </div>
           )}
